@@ -11,9 +11,9 @@ type K8s interface {
 	GetPod(name,namespace string)(*coreV1.Pod,error)
 	GetStatefulSet(name,namespace string)(*apiV1.StatefulSet,error)
 	GetDaemonSet(name,namespace string)(*apiV1.DaemonSet,error)
-	UpdateDeployment(deployment apiV1.Deployment,resource v1.Resource)error
-	UpdatePod(deployment coreV1.Pod,resource v1.Resource)error
-	UpdateStatefulSet(statefulSet apiV1.StatefulSet,resource v1.Resource)error
-	UpdateDaemonSet(daemonSet apiV1.DaemonSet,resource v1.Resource)error
+	UpdateDeployment(resource v1.Resource)error
+	UpdatePod(resource v1.Resource)error
+	UpdateStatefulSet(resource v1.Resource)error
+	UpdateDaemonSet(resource v1.Resource)error
 }
 
