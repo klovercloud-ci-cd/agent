@@ -3,6 +3,7 @@ package v1
 import "github.com/klovercloud-ci/enums"
 
 type Resource struct {
+	ProcessId string `json:"process_id"`
 	Type     enums.RESOURCE_TYPE `json:"type"`
 	Name string                  `json:"name"`
 	Namespace string             `json:"namespace"`
