@@ -25,8 +25,12 @@ func (k k8sService) UpdateDeployment( resource v1.Resource) error {
 	    	return getErr
 		}
 		result.Spec.Replicas = &resource.Replica
-		for _,each:=range resource.Images{
-			result.Spec.Template.Spec.Containers[each.ImageIndex].Image=each.Image
+		for i,each:=range resource.Images{
+			if i>=len(result.Spec.Template.Spec.Containers)-1{
+				log.Println("index out of bound")
+			}else {
+				result.Spec.Template.Spec.Containers[each.ImageIndex].Image = each.Image
+			}
 		}
 		_, updateErr := k.Kcs.AppsV1().Deployments(resource.Namespace).Update(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
