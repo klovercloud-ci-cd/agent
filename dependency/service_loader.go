@@ -9,6 +9,8 @@ import (
 
 func GetResourceService() service.Resource{
 	var observers [] service.Observer
+	eventStoreLogEventService:=logic.NewEventStoreLogEventService(logic.NewHttpPublisherService())
+	observers= append(observers, eventStoreLogEventService)
 	k8sClientSet:=config.GetClientSet()
 	return logic.NewResourceService(logic.NewK8sService(k8sClientSet,observers),observers)
 }

@@ -20,7 +20,6 @@ func (r resourceApi) Update(context echo.Context) error {
 		log.Println("Input Error:", err.Error())
 		return common.GenerateErrorResponse(context,nil,err.Error())
 	}
-
 	error :=r.resourceService.Update(data)
 
 	if error != nil{

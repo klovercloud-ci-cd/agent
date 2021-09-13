@@ -1,7 +1,8 @@
 package v1
 
 type Subject struct {
-	Name,Namespace string
+	Step,Log string
+	Name,Namespace,ProcessId string
 	EventData map[string]interface{}
 	ProcessLabel map[string]string
 }

@@ -7,6 +7,7 @@ import (
 )
 
 var ServerPort string
+var EventStoreUrl string
 var IsK8 string
 func InitEnvironmentVariables(){
 	err := godotenv.Load()
@@ -14,6 +15,7 @@ func InitEnvironmentVariables(){
 		log.Println("ERROR:", err.Error())
 		return
 	}
+	EventStoreUrl=os.Getenv("EVENT_STORE_URL")
 	ServerPort = os.Getenv("SERVER_PORT")
 
 }

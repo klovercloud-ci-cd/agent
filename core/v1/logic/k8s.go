@@ -4,6 +4,7 @@ import (
 	"context"
 	v1 "github.com/klovercloud-ci/core/v1"
 	"github.com/klovercloud-ci/core/v1/service"
+	"github.com/klovercloud-ci/enums"
 	apiV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,17 +18,28 @@ type k8sService struct {
 	observerList []service.Observer
 }
 
+
 func (k k8sService) UpdateDeployment( resource v1.Resource) error {
+	subject:=v1.Subject{resource.Step,"",resource.Name,resource.Namespace,resource.ProcessId,map[string]interface{}{"log":"Initiating  deployment ...","reason":"n/a"},nil}
+	subject.EventData["status"]=enums.INITIALIZING
+	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		result, getErr := k.GetDeployment(resource.Name,resource.Namespace)
 		if getErr != nil {
-			log.Println("Failed to get latest version of Deployment: %v", getErr)
+			log.Println("Failed to get latest version of Deployment: ", getErr)
+			subject.Log="Failed to get latest version of Deployment: "+ getErr.Error()
+			subject.EventData["log"]=subject.Log
+			subject.EventData["status"]=enums.FAILED
+			go k.notifyAll(subject)
 	    	return getErr
 		}
 		result.Spec.Replicas = &resource.Replica
 		for i,each:=range resource.Images{
-			if i>=len(result.Spec.Template.Spec.Containers)-1{
-				log.Println("index out of bound")
+			if i>len(result.Spec.Template.Spec.Containers)-1{
+				subject.Log="index out of bound! ignoring container for "+each.Image
+				subject.EventData["log"]=subject.Log
+				subject.EventData["status"]=enums.PROCESSING
+				go k.notifyAll(subject)
 			}else {
 				result.Spec.Template.Spec.Containers[each.ImageIndex].Image = each.Image
 			}
@@ -36,9 +48,17 @@ func (k k8sService) UpdateDeployment( resource v1.Resource) error {
 		return updateErr
 	})
 	if retryErr != nil {
-		log.Println("Update failed: %v", retryErr)
+		subject.Log="Update failed: "+ retryErr.Error()
+		subject.EventData["log"]=subject.Log
+		subject.EventData["status"]=enums.FAILED
+		go k.notifyAll(subject)
 		return retryErr
 	}
+
+	subject.Log="Updated Successfully"
+	subject.EventData["log"]=subject.Log
+	subject.EventData["status"]=enums.SUCCESSFUL
+	go k.notifyAll(subject)
 	return nil
 }
 
