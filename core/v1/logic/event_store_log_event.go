@@ -27,7 +27,7 @@ func (e eventStoreEventService) Listen(subject v1.Subject) {
 		log.Println(err.Error())
 		return
 	}
-	e.httpPublisher.Post(config.EventStoreUrl,header,b)
+	e.httpPublisher.Post(config.EventStoreUrl+"/logs",header,b)
 }
 
 func NewEventStoreLogEventService(httpPublisher service.HttpPublisher) service.EventStoreLogEvent {
