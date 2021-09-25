@@ -13,6 +13,6 @@ func GetResourceService() service.Resource{
 	eventStoreProcessEventService:=logic.NewEventStoreProcessEventService(logic.NewHttpPublisherService())
 	observers= append(observers, eventStoreLogEventService)
 	observers= append(observers, eventStoreProcessEventService)
-	k8sClientSet:=config.GetClientSet()
-	return logic.NewResourceService(logic.NewK8sService(k8sClientSet,observers),observers)
+	k8sClientSet,dynamicClient,discoveryClient:=config.GetClientSet()
+	return logic.NewResourceService(logic.NewK8sService(k8sClientSet,dynamicClient,discoveryClient,observers),observers)
 }

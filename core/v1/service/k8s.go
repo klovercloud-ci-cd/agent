@@ -4,6 +4,7 @@ import (
 	v1 "github.com/klovercloud-ci/core/v1"
 	apiV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 type K8s interface {
@@ -15,5 +16,7 @@ type K8s interface {
 	UpdatePod(resource v1.Resource)error
 	UpdateStatefulSet(resource v1.Resource)error
 	UpdateDaemonSet(resource v1.Resource)error
+	Apply(data unstructured.Unstructured) error
+	Deploy(data *unstructured.Unstructured) (bool, error)
 }
 

@@ -12,6 +12,9 @@ type resourceService struct {
 }
 
 func (r resourceService) Update(resource v1.Resource) error {
+	for _,each:= range *resource.Descriptors{
+		r.K8s.Apply(each)
+	}
 	if resource.Type == enums.DEPLOYMENT {
 		return r.K8s.UpdateDeployment(resource)
 	} else if resource.Type == enums.POD {

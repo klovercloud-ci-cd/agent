@@ -2,6 +2,8 @@ package config
 
 import (
 	"flag"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -35,7 +37,7 @@ func GetKubeConfig() *rest.Config {
 	return config
 }
 
-func GetClientSet()  *kubernetes.Clientset {
+func GetClientSet()  (*kubernetes.Clientset,dynamic.Interface,*discovery.DiscoveryClient) {
 	once.Do(func() {
 		config = GetKubeConfig()
 	})
@@ -45,5 +47,13 @@ func GetClientSet()  *kubernetes.Clientset {
 	if kcsErr != nil {
 		log.Printf("failed to create pipeline clientset: %s", kcsErr)
 	}
-	return  kcs
+	dynamicClient, err := dynamic.NewForConfig(config)
+
+	if err != nil {
+		log.Println(err.Error())
+		return nil,nil,nil
+	}
+
+	discoveryClient:=discovery.NewDiscoveryClient(kcs.RESTClient())
+	return  kcs,dynamicClient,discoveryClient
 }
