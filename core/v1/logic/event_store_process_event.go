@@ -9,7 +9,7 @@ import (
 )
 
 type eventStoreProcessService struct {
-	httpPublisher service.HttpPublisher
+	httpPublisher service.HttpClient
 }
 
 func (e eventStoreProcessService) Listen(subject v1.Subject) {
@@ -29,7 +29,7 @@ func (e eventStoreProcessService) Listen(subject v1.Subject) {
 	}
 }
 
-func NewEventStoreProcessEventService(httpPublisher service.HttpPublisher) service.EventStoreProcessEvent {
+func NewEventStoreProcessEventService(httpPublisher service.HttpClient) service.EventStoreProcessEvent {
 	return &eventStoreProcessService{
 		httpPublisher: httpPublisher,
 	}

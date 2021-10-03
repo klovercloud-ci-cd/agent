@@ -9,10 +9,10 @@ import (
 
 func GetResourceService() service.Resource{
 	var observers [] service.Observer
-	eventStoreLogEventService:=logic.NewEventStoreLogEventService(logic.NewHttpPublisherService())
-	eventStoreProcessEventService:=logic.NewEventStoreProcessEventService(logic.NewHttpPublisherService())
+	eventStoreLogEventService:=logic.NewEventStoreLogEventService(logic.NewHttpClientService())
+	eventStoreProcessEventService:=logic.NewEventStoreProcessEventService(logic.NewHttpClientService())
 	observers= append(observers, eventStoreLogEventService)
 	observers= append(observers, eventStoreProcessEventService)
 	k8sClientSet,dynamicClient,discoveryClient:=config.GetClientSet()
-	return logic.NewResourceService(logic.NewK8sService(k8sClientSet,dynamicClient,discoveryClient,observers),observers)
+	return logic.NewResourceService(logic.NewK8sService(k8sClientSet,dynamicClient,discoveryClient,observers),observers,logic.NewHttpClientService())
 }

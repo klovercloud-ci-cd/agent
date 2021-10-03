@@ -98,12 +98,12 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 		result.Spec.Replicas = &resource.Replica
 		for i, each := range resource.Images {
 			if i > len(result.Spec.Template.Spec.Containers)-1 {
-				subject.Log = "index out of bound! ignoring container for " + each.Image
+				subject.Log = "index out of bound! ignoring container for " + each
 				subject.EventData["log"] = subject.Log
 				subject.EventData["status"] = enums.PROCESSING
 				go k.notifyAll(subject)
 			} else {
-				result.Spec.Template.Spec.Containers[each.ImageIndex].Image = each.Image
+				result.Spec.Template.Spec.Containers[i].Image = each
 			}
 		}
 		_, updateErr := k.kcs.AppsV1().Deployments(resource.Namespace).Update(context.TODO(), result, metav1.UpdateOptions{})
@@ -131,8 +131,8 @@ func (k k8sService) UpdatePod(resource v1.Resource) error {
 			log.Println("Failed to get latest version of Deployment: %v", getErr)
 			return getErr
 		}
-		for _, each := range resource.Images {
-			result.Spec.Containers[each.ImageIndex].Image = each.Image
+		for i, each := range resource.Images {
+			result.Spec.Containers[i].Image = each
 		}
 		_, updateErr := k.kcs.CoreV1().Pods(resource.Namespace).Update(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
@@ -152,8 +152,8 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 			return getErr
 		}
 		result.Spec.Replicas = &resource.Replica
-		for _, each := range resource.Images {
-			result.Spec.Template.Spec.Containers[each.ImageIndex].Image = each.Image
+		for i, each := range resource.Images {
+			result.Spec.Template.Spec.Containers[i].Image = each
 		}
 		_, updateErr := k.kcs.AppsV1().StatefulSets(resource.Namespace).Update(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
@@ -172,8 +172,8 @@ func (k k8sService) UpdateDaemonSet(resource v1.Resource) error {
 			log.Println("Failed to get latest version of Deployment: %v", getErr)
 			return getErr
 		}
-		for _, each := range resource.Images {
-			result.Spec.Template.Spec.Containers[each.ImageIndex].Image = each.Image
+		for i, each := range resource.Images {
+			result.Spec.Template.Spec.Containers[i].Image = each
 		}
 		_, updateErr := k.kcs.AppsV1().DaemonSets(resource.Namespace).Update(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr

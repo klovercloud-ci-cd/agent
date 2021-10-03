@@ -13,8 +13,5 @@ type Resource struct {
 	Name string                  `json:"name"`
 	Namespace string             `json:"namespace"`
 	Replica int32                `json:"replica"`
-	Images [] struct {
-		ImageIndex int `json:"image_index"`
-		Image      string `json:"image"`
-	}`json:"images"`
+	Images [] string`json:"images"`
 }

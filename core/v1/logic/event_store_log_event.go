@@ -10,7 +10,7 @@ import (
 )
 
 type eventStoreEventService struct {
-	httpPublisher service.HttpPublisher
+	httpPublisher service.HttpClient
 }
 
 func (e eventStoreEventService) Listen(subject v1.Subject) {
@@ -30,7 +30,7 @@ func (e eventStoreEventService) Listen(subject v1.Subject) {
 	e.httpPublisher.Post(config.EventStoreUrl+"/logs",header,b)
 }
 
-func NewEventStoreLogEventService(httpPublisher service.HttpPublisher) service.EventStoreLogEvent {
+func NewEventStoreLogEventService(httpPublisher service.HttpClient) service.EventStoreLogEvent {
 	return &eventStoreEventService{
 		httpPublisher: httpPublisher,
 	}
