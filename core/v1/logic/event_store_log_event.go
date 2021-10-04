@@ -30,7 +30,7 @@ func (e eventStoreEventService) Listen(subject v1.Subject) {
 	e.httpPublisher.Post(config.EventStoreUrl+"/logs",header,b)
 }
 
-func NewEventStoreLogEventService(httpPublisher service.HttpClient) service.EventStoreLogEvent {
+func NewEventStoreLogEventService(httpPublisher service.HttpClient) service.Observer {
 	return &eventStoreEventService{
 		httpPublisher: httpPublisher,
 	}

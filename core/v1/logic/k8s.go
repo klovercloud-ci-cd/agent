@@ -91,7 +91,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 			log.Println("Failed to get latest version of Deployment: ", getErr)
 			subject.Log = "Failed to get latest version of Deployment: " + getErr.Error()
 			subject.EventData["log"] = subject.Log
-			subject.EventData["status"] = enums.FAILED
+			subject.EventData["status"] = enums.DEPLOYMENT_FAILED
 			go k.notifyAll(subject)
 			return getErr
 		}
@@ -112,7 +112,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 	if retryErr != nil {
 		subject.Log = "Update failed: " + retryErr.Error()
 		subject.EventData["log"] = subject.Log
-		subject.EventData["status"] = enums.FAILED
+		subject.EventData["status"] = enums.DEPLOYMENT_FAILED
 		go k.notifyAll(subject)
 		return retryErr
 	}
