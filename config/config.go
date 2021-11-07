@@ -9,10 +9,12 @@ import (
 
 var ServerPort string
 var EventStoreUrl string
-var EventStoreToken string
 var PullSize string
 var IsK8 string
 var AgentName string
+var Publickey string
+var EnableAuthentication bool
+var Token string
 func InitEnvironmentVariables(){
 	err := godotenv.Load()
 	if err != nil {
@@ -25,6 +27,17 @@ func InitEnvironmentVariables(){
 	}
 	ServerPort = os.Getenv("SERVER_PORT")
 	AgentName=os.Getenv("AGENT_NAME")
-	EventStoreToken=os.Getenv("EVENT_STORE_URL_TOKEN")
 	PullSize=os.Getenv("PULL_SIZE")
+	Publickey=os.Getenv("PUBLIC_KEY")
+
+	if os.Getenv("ENABLE_AUTHENTICATION")==""{
+		EnableAuthentication=false
+	}else{
+		if strings.ToLower(os.Getenv("ENABLE_AUTHENTICATION"))=="true"{
+			EnableAuthentication=true
+		}else{
+			EnableAuthentication=false
+		}
+	}
+	Token=os.Getenv("TOKEN")
 }

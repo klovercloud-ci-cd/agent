@@ -46,6 +46,7 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 			events := ProcessLifeCycleEventList{data}
 			header := make(map[string]string)
 			header["Content-Type"] = "application/json"
+			header["token"]=config.Token
 			b, err := json.Marshal(events)
 			if err != nil {
 				log.Println(err.Error())

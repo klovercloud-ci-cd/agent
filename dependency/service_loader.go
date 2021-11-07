@@ -18,3 +18,6 @@ func GetResourceService() service.Resource{
 	k8sClientSet,dynamicClient,discoveryClient:=config.GetClientSet()
 	return logic.NewResourceService(logic.NewK8sService(k8sClientSet,dynamicClient,discoveryClient,observers),observers,logic.NewHttpClientService())
 }
+func GetJwtService()service.JwtService{
+	return logic.NewJwtService()
+}

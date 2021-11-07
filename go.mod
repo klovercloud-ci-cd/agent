@@ -3,6 +3,7 @@ module github.com/klovercloud-ci
 go 1.15
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/elazarl/goproxy v0.0.0-20180725130230-947c36da3153 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect

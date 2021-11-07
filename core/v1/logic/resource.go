@@ -19,8 +19,8 @@ type resourceService struct {
 func (r resourceService) Pull() {
 	url := config.EventStoreUrl+"/process_life_cycle_events?count="+config.PullSize+"&agent="+config.AgentName
 	header := make(map[string]string)
-	header["Authorization"] = "token " + config.EventStoreToken
 	header["Accept"] = "application/json"
+	header["token"]=config.Token
 	err, data := r.httpClient.Get(url,header)
 	if err != nil {
 		// send to observer

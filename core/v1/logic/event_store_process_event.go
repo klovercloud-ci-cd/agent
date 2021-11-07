@@ -3,8 +3,8 @@ package logic
 import (
 	"encoding/json"
 	"github.com/klovercloud-ci/config"
-	"github.com/klovercloud-ci/core/v1/service"
 	"github.com/klovercloud-ci/core/v1"
+	"github.com/klovercloud-ci/core/v1/service"
 	"log"
 )
 
@@ -20,6 +20,7 @@ func (e eventStoreProcessService) Listen(subject v1.Subject) {
 		}
 		header:=make(map[string]string)
 		header["Content-Type"]="application/json"
+		header["token"]=config.Token
 		b, err := json.Marshal(event)
 		if err!=nil{
 			log.Println(err.Error())
