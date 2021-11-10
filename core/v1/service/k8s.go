@@ -7,16 +7,16 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+// K8s K8s operations.
 type K8s interface {
-	GetDeployment(name,namespace string)(*apiV1.Deployment,error)
-	GetPod(name,namespace string)(*coreV1.Pod,error)
-	GetStatefulSet(name,namespace string)(*apiV1.StatefulSet,error)
-	GetDaemonSet(name,namespace string)(*apiV1.DaemonSet,error)
-	UpdateDeployment(resource v1.Resource)error
-	UpdatePod(resource v1.Resource)error
-	UpdateStatefulSet(resource v1.Resource)error
-	UpdateDaemonSet(resource v1.Resource)error
+	GetDeployment(name, namespace string) (*apiV1.Deployment, error)
+	GetPod(name, namespace string) (*coreV1.Pod, error)
+	GetStatefulSet(name, namespace string) (*apiV1.StatefulSet, error)
+	GetDaemonSet(name, namespace string) (*apiV1.DaemonSet, error)
+	UpdateDeployment(resource v1.Resource) error
+	UpdatePod(resource v1.Resource) error
+	UpdateStatefulSet(resource v1.Resource) error
+	UpdateDaemonSet(resource v1.Resource) error
 	Apply(data unstructured.Unstructured) error
 	Deploy(data *unstructured.Unstructured) (bool, error)
 }
-

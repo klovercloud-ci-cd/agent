@@ -5,13 +5,14 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+// Resource agent applicable workload info.
 type Resource struct {
-	Step string `json:"step"`
-	ProcessId string `json:"process_id"`
-	Descriptors *[]unstructured.Unstructured  `json:"descriptors" yaml:"descriptors"`
-	Type     enums.RESOURCE_TYPE `json:"type"`
-	Name string                  `json:"name"`
-	Namespace string             `json:"namespace"`
-	Replica int32                `json:"replica"`
-	Images [] string`json:"images"`
+	Step        string                       `json:"step"`
+	ProcessId   string                       `json:"process_id"`
+	Descriptors *[]unstructured.Unstructured `json:"descriptors" yaml:"descriptors"`
+	Type        enums.RESOURCE_TYPE          `json:"type"`
+	Name        string                       `json:"name"`
+	Namespace   string                       `json:"namespace"`
+	Replica     int32                        `json:"replica"`
+	Images      []string                     `json:"images"`
 }

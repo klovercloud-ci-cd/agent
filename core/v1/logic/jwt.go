@@ -18,17 +18,15 @@ type jwtService struct {
 func (j jwtService) ValidateToken(tokenString string) (bool, *jwt.Token) {
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return (j.Jwt.PublicKey), nil
+		return j.Jwt.PublicKey, nil
 	})
-	if err!=nil{
-		log.Print("[ERROR]: Token is invalid! ",err.Error())
-		return false,nil
+	if err != nil {
+		log.Print("[ERROR]: Token is invalid! ", err.Error())
+		return false, nil
 	}
-	return true,token
-
+	return true, token
 
 }
-
 
 func getPublicKey() *rsa.PublicKey {
 	block, _ := pem.Decode([]byte(config.Publickey))
@@ -41,10 +39,11 @@ func getPublicKey() *rsa.PublicKey {
 	return publicKeyImported
 }
 
-func NewJwtService() service.JwtService {
+// NewJwtService returns Jwt type service
+func NewJwtService() service.Jwt {
 	return jwtService{
 		Jwt: v1.Jwt{
-			PublicKey:  getPublicKey(),
+			PublicKey: getPublicKey(),
 		},
 	}
 }

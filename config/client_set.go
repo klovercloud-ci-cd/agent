@@ -16,6 +16,7 @@ import (
 var config *rest.Config
 var once sync.Once
 
+// GetKubeConfig returns rest config for kubernetes.
 func GetKubeConfig() *rest.Config {
 	var config *rest.Config
 	var err error
@@ -37,7 +38,8 @@ func GetKubeConfig() *rest.Config {
 	return config
 }
 
-func GetClientSet()  (*kubernetes.Clientset,dynamic.Interface,*discovery.DiscoveryClient) {
+// GetClientSet returns k8s clientSets
+func GetClientSet() (*kubernetes.Clientset, dynamic.Interface, *discovery.DiscoveryClient) {
 	once.Do(func() {
 		config = GetKubeConfig()
 	})
@@ -51,9 +53,9 @@ func GetClientSet()  (*kubernetes.Clientset,dynamic.Interface,*discovery.Discove
 
 	if err != nil {
 		log.Println(err.Error())
-		return nil,nil,nil
+		return nil, nil, nil
 	}
 
-	discoveryClient:=discovery.NewDiscoveryClient(kcs.RESTClient())
-	return  kcs,dynamicClient,discoveryClient
+	discoveryClient := discovery.NewDiscoveryClient(kcs.RESTClient())
+	return kcs, dynamicClient, discoveryClient
 }

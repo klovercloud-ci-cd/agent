@@ -14,23 +14,24 @@ type eventStoreEventService struct {
 }
 
 func (e eventStoreEventService) Listen(subject v1.Subject) {
-	data:=v1.LogEvent{
+	data := v1.LogEvent{
 		ProcessId: subject.ProcessId,
 		Log:       subject.Log,
 		Step:      subject.Step,
 		CreatedAt: time.Time{}.UTC(),
 	}
-	header:=make(map[string]string)
-	header["Content-Type"]="application/json"
-	header["token"]=config.Token
+	header := make(map[string]string)
+	header["Content-Type"] = "application/json"
+	header["token"] = config.Token
 	b, err := json.Marshal(data)
-	if err!=nil{
+	if err != nil {
 		log.Println(err.Error())
 		return
 	}
-	e.httpPublisher.Post(config.EventStoreUrl+"/logs",header,b)
+	e.httpPublisher.Post(config.EventStoreUrl+"/logs", header, b)
 }
 
+// NewEventStoreLogEventService returns Observer type service
 func NewEventStoreLogEventService(httpPublisher service.HttpClient) service.Observer {
 	return &eventStoreEventService{
 		httpPublisher: httpPublisher,

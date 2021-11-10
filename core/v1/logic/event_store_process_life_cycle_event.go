@@ -16,7 +16,7 @@ type eventStoreProcessLifeCycleService struct {
 
 func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 	log.Println(subject.EventData["status"])
-	if subject.EventData["status"]==nil{
+	if subject.EventData["status"] == nil {
 		return
 	}
 	if subject.EventData != nil {
@@ -30,23 +30,23 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 		for _, name := range processLifeCycleEvent.Next {
 			nestStepNameMap[name] = true
 		}
-		 if subject.EventData["status"] == enums.DEPLOYMENT_FAILED || subject.EventData["status"] == enums.ERROR || subject.EventData["status"] == enums.TERMINATING{
+		if subject.EventData["status"] == enums.DEPLOYMENT_FAILED || subject.EventData["status"] == enums.ERROR || subject.EventData["status"] == enums.TERMINATING {
 			processLifeCycleEvent.Status = enums.FAILED
-			data = append(data,processLifeCycleEvent)
-		}else if subject.EventData["status"] == enums.SUCCESSFUL{
+			data = append(data, processLifeCycleEvent)
+		} else if subject.EventData["status"] == enums.SUCCESSFUL {
 			processLifeCycleEvent.Status = enums.COMPLETED
-			data = append(data,processLifeCycleEvent)
-		}else{
+			data = append(data, processLifeCycleEvent)
+		} else {
 			return
-		 }
-		type ProcessLifeCycleEventList struct {
-			Events [] v1.ProcessLifeCycleEvent `bson:"events" json :"events"`
 		}
-		if len(data)>0 {
+		type ProcessLifeCycleEventList struct {
+			Events []v1.ProcessLifeCycleEvent `bson:"events" json :"events"`
+		}
+		if len(data) > 0 {
 			events := ProcessLifeCycleEventList{data}
 			header := make(map[string]string)
 			header["Content-Type"] = "application/json"
-			header["token"]=config.Token
+			header["token"] = config.Token
 			b, err := json.Marshal(events)
 			if err != nil {
 				log.Println(err.Error())
@@ -57,6 +57,7 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 	}
 }
 
+// NewEventStoreProcessLifeCycleService returns Observer type service
 func NewEventStoreProcessLifeCycleService(httpPublisher service.HttpClient) service.Observer {
 	return &eventStoreProcessLifeCycleService{
 		httpPublisher: httpPublisher,

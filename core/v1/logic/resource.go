@@ -13,15 +13,15 @@ import (
 type resourceService struct {
 	K8s          service.K8s
 	observerList []service.Observer
-	httpClient service.HttpClient
+	httpClient   service.HttpClient
 }
 
 func (r resourceService) Pull() {
-	url := config.EventStoreUrl+"/process_life_cycle_events?count="+config.PullSize+"&agent="+config.AgentName
+	url := config.EventStoreUrl + "/process_life_cycle_events?count=" + config.PullSize + "&agent=" + config.AgentName
 	header := make(map[string]string)
 	header["Accept"] = "application/json"
-	header["token"]=config.Token
-	err, data := r.httpClient.Get(url,header)
+	header["token"] = config.Token
+	err, data := r.httpClient.Get(url, header)
 	if err != nil {
 		// send to observer
 		log.Println(err.Error())
@@ -47,13 +47,13 @@ func (r resourceService) Pull() {
 		// send to observer
 		return
 	}
-	for _,each:=range resources{
+	for _, each := range resources {
 		r.Update(each)
 	}
 }
 
 func (r resourceService) Update(resource v1.Resource) error {
-	for _,each:= range *resource.Descriptors{
+	for _, each := range *resource.Descriptors {
 		r.K8s.Apply(each)
 	}
 	if resource.Type == enums.DEPLOYMENT {
@@ -67,16 +67,17 @@ func (r resourceService) Update(resource v1.Resource) error {
 	}
 	return nil
 }
-func (r resourceService)notifyAll(subject v1.Subject){
+func (r resourceService) notifyAll(subject v1.Subject) {
 	for _, observer := range r.observerList {
 		go observer.Listen(subject)
 	}
 }
 
-func NewResourceService(k8s service.K8s, observerList []service.Observer,httpClient service.HttpClient) service.Resource {
+// NewResourceService returns resource type service.
+func NewResourceService(k8s service.K8s, observerList []service.Observer, httpClient service.HttpClient) service.Resource {
 	return &resourceService{
 		K8s:          k8s,
 		observerList: observerList,
-		httpClient: httpClient,
+		httpClient:   httpClient,
 	}
 }

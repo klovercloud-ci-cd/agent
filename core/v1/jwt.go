@@ -1,8 +1,10 @@
 package v1
+
 import (
 	"crypto/rsa"
 )
-type Jwt struct {
-	PublicKey  *rsa.PublicKey
-}
 
+// Jwt Struct of Jwt keys
+type Jwt struct {
+	PublicKey *rsa.PublicKey
+}

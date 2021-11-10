@@ -1,0 +1,127 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "contact": {}
+  },
+  "paths": {
+    "/api/v1/resources/{processId}": {
+      "post": {
+        "description": "Apply resources",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resource"
+        ],
+        "summary": "Apply resources",
+        "parameters": [
+          {
+            "description": "Resource Data",
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.Resource"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/common.ResponseDTO"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "common.MetaData": {
+      "type": "object",
+      "properties": {
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "page": {
+          "type": "integer"
+        },
+        "page_count": {
+          "type": "integer"
+        },
+        "per_page": {
+          "type": "integer"
+        },
+        "total_count": {
+          "type": "integer"
+        }
+      }
+    },
+    "common.ResponseDTO": {
+      "type": "object",
+      "properties": {
+        "_metadata": {
+          "$ref": "#/definitions/common.MetaData"
+        },
+        "data": {},
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "unstructured.Unstructured": {
+      "type": "object",
+      "properties": {
+        "object": {
+          "description": "Object is a JSON compatible map with string, float, int, bool, []interface{}, or\nmap[string]interface{}\nchildren.",
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "v1.Resource": {
+      "type": "object",
+      "properties": {
+        "descriptors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/unstructured.Unstructured"
+          }
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "process_id": {
+          "type": "string"
+        },
+        "replica": {
+          "type": "integer"
+        },
+        "step": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

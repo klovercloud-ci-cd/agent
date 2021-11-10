@@ -4,6 +4,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-type JwtService interface {
+// Jwt Jwt operations.
+type Jwt interface {
 	ValidateToken(tokenString string) (bool, *jwt.Token)
 }

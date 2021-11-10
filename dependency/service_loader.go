@@ -4,20 +4,22 @@ import (
 	"github.com/klovercloud-ci-cd/agent/config"
 	"github.com/klovercloud-ci-cd/agent/core/v1/logic"
 	"github.com/klovercloud-ci-cd/agent/core/v1/service"
-
 )
 
-func GetResourceService() service.Resource{
-	var observers [] service.Observer
-	eventStoreLogEventService:=logic.NewEventStoreLogEventService(logic.NewHttpClientService())
-	eventStoreProcessEventService:=logic.NewEventStoreProcessEventService(logic.NewHttpClientService())
-	eventStoreProcessLifeCycleEvent:=logic.NewEventStoreProcessLifeCycleService(logic.NewHttpClientService())
-	observers= append(observers, eventStoreLogEventService)
-	observers= append(observers, eventStoreProcessEventService)
-	observers= append(observers, eventStoreProcessLifeCycleEvent)
-	k8sClientSet,dynamicClient,discoveryClient:=config.GetClientSet()
-	return logic.NewResourceService(logic.NewK8sService(k8sClientSet,dynamicClient,discoveryClient,observers),observers,logic.NewHttpClientService())
+// GetV1ResourceService returns Resource service
+func GetV1ResourceService() service.Resource {
+	var observers []service.Observer
+	eventStoreLogEventService := logic.NewEventStoreLogEventService(logic.NewHttpClientService())
+	eventStoreProcessEventService := logic.NewEventStoreProcessEventService(logic.NewHttpClientService())
+	eventStoreProcessLifeCycleEvent := logic.NewEventStoreProcessLifeCycleService(logic.NewHttpClientService())
+	observers = append(observers, eventStoreLogEventService)
+	observers = append(observers, eventStoreProcessEventService)
+	observers = append(observers, eventStoreProcessLifeCycleEvent)
+	k8sClientSet, dynamicClient, discoveryClient := config.GetClientSet()
+	return logic.NewResourceService(logic.NewK8sService(k8sClientSet, dynamicClient, discoveryClient, observers), observers, logic.NewHttpClientService())
 }
-func GetJwtService()service.JwtService{
+
+// GetV1JwtService returns Jwt services
+func GetV1JwtService() service.Jwt {
 	return logic.NewJwtService()
 }

@@ -72,12 +72,10 @@ func (k k8sService) Deploy(data *unstructured.Unstructured) (bool, error) {
 		} else {
 			_, err = k.dynamicClient.Resource(groupVersionResource).Create(context.Background(), data, metaV1.CreateOptions{})
 		}
-
 		if err != nil {
 			return false, err
-		} else {
-			return true, nil
 		}
+		return true, nil
 	}
 }
 
@@ -201,12 +199,13 @@ func (k k8sService) GetDaemonSet(name, namespace string) (*apiV1.DaemonSet, erro
 	return k.kcs.AppsV1().DaemonSets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 }
 
-func (k8s k8sService) notifyAll(subject v1.Subject) {
-	for _, observer := range k8s.observerList {
+func (k k8sService) notifyAll(subject v1.Subject) {
+	for _, observer := range k.observerList {
 		go observer.Listen(subject)
 	}
 }
 
+// NewK8sService returns K8s type service.
 func NewK8sService(Kcs *kubernetes.Clientset, dynamicClient dynamic.Interface, discoveryClient *discovery.DiscoveryClient, observerList []service.Observer) service.K8s {
 	return &k8sService{
 		kcs:             Kcs,
