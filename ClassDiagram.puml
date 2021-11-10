@@ -1,0 +1,220 @@
+@startuml
+namespace api {
+    interface Resource  {
+        + Update(ctx echo.Context) error
+
+    }
+}
+
+
+namespace common {
+    class MetaData << (S,Aquamarine) >> {
+        + Page int64
+        + PerPage int64
+        + PageCount int64
+        + TotalCount int64
+        + Links []<font color=blue>map</font>[string]string
+
+    }
+    class ResponseDTO << (S,Aquamarine) >> {
+        + Metadata *MetaData
+        + Data <font color=blue>interface</font>{}
+        + Status string
+        + Message string
+
+    }
+}
+
+
+namespace docs {
+    class s << (S,Aquamarine) >> {
+        + ReadDoc() string
+
+    }
+    class swaggerInfo << (S,Aquamarine) >> {
+        + Version string
+        + Host string
+        + BasePath string
+        + Schemes []string
+        + Title string
+        + Description string
+
+    }
+}
+
+
+namespace enums {
+    class enums.PIPELINE_STATUS << (T, #FF7700) >>  {
+    }
+    class enums.PROCESS_STATUS << (T, #FF7700) >>  {
+    }
+    class enums.RESOURCE_TYPE << (T, #FF7700) >>  {
+    }
+}
+
+
+namespace logic {
+    class eventStoreEventService << (S,Aquamarine) >> {
+        - httpPublisher service.HttpClient
+
+        + Listen(subject v1.Subject) 
+
+    }
+    class eventStoreProcessLifeCycleService << (S,Aquamarine) >> {
+        - httpPublisher service.HttpClient
+
+        + Listen(subject v1.Subject) 
+
+    }
+    class eventStoreProcessService << (S,Aquamarine) >> {
+        - httpPublisher service.HttpClient
+
+        + Listen(subject v1.Subject) 
+
+    }
+    class httpClientService << (S,Aquamarine) >> {
+        + Post(url string, header <font color=blue>map</font>[string]string, body []byte) error
+        + Get(url string, header <font color=blue>map</font>[string]string) ([]byte, error)
+
+    }
+    class jwtService << (S,Aquamarine) >> {
+        + Jwt v1.Jwt
+
+        + ValidateToken(tokenString string) (bool, *jwt.Token)
+
+    }
+    class k8sService << (S,Aquamarine) >> {
+        - kcs *kubernetes.Clientset
+        - dynamicClient dynamic.Interface
+        - discoveryClient *discovery.DiscoveryClient
+        - observerList []service.Observer
+
+        - notifyAll(subject v1.Subject) 
+
+        + Apply(data unstructured.Unstructured) error
+        + Deploy(data *unstructured.Unstructured) (bool, error)
+        + UpdateDeployment(resource v1.Resource) error
+        + UpdatePod(resource v1.Resource) error
+        + UpdateStatefulSet(resource v1.Resource) error
+        + UpdateDaemonSet(resource v1.Resource) error
+        + GetDeployment(name string, namespace string) (*v1.Deployment, error)
+        + GetPod(name string, namespace string) (*v1.Pod, error)
+        + GetStatefulSet(name string, namespace string) (*v1.StatefulSet, error)
+        + GetDaemonSet(name string, namespace string) (*v1.DaemonSet, error)
+
+    }
+    class resourceService << (S,Aquamarine) >> {
+        - observerList []service.Observer
+        - httpClient service.HttpClient
+
+        + K8s service.K8s
+
+        - notifyAll(subject v1.Subject) 
+
+        + Pull() 
+        + Update(resource v1.Resource) error
+
+    }
+}
+
+"service.Observer" <|-- "logic.eventStoreEventService"
+"service.Observer" <|-- "logic.eventStoreProcessLifeCycleService"
+"service.Observer" <|-- "logic.eventStoreProcessService"
+"service.HttpClient" <|-- "logic.httpClientService"
+"service.Jwt" <|-- "logic.jwtService"
+"service.K8s" <|-- "logic.k8sService"
+"service.Resource" <|-- "logic.resourceService"
+
+namespace service {
+    interface HttpClient  {
+        + Post(url string, header <font color=blue>map</font>[string]string, body []byte) error
+        + Get(url string, header <font color=blue>map</font>[string]string) ([]byte, error)
+
+    }
+    interface Jwt  {
+        + ValidateToken(tokenString string) (bool, *jwt.Token)
+
+    }
+    interface K8s  {
+        + GetDeployment(name string, namespace string) (*v1.Deployment, error)
+        + GetPod(name string, namespace string) (*v1.Pod, error)
+        + GetStatefulSet(name string, namespace string) (*v1.StatefulSet, error)
+        + GetDaemonSet(name string, namespace string) (*v1.DaemonSet, error)
+        + UpdateDeployment(resource v1.Resource) error
+        + UpdatePod(resource v1.Resource) error
+        + UpdateStatefulSet(resource v1.Resource) error
+        + UpdateDaemonSet(resource v1.Resource) error
+        + Apply(data unstructured.Unstructured) error
+        + Deploy(data *unstructured.Unstructured) (bool, error)
+
+    }
+    interface Observer  {
+        + Listen( v1.Subject) 
+
+    }
+    interface Resource  {
+        + Update(resource v1.Resource) error
+        + Pull() 
+
+    }
+}
+
+
+namespace v1 {
+    class Jwt << (S,Aquamarine) >> {
+        + PublicKey *rsa.PublicKey
+
+    }
+    class LogEvent << (S,Aquamarine) >> {
+        + ProcessId string
+        + Log string
+        + Step string
+        + CreatedAt time.Time
+
+    }
+    class PipelineProcessEvent << (S,Aquamarine) >> {
+        + ProcessId string
+        + Data <font color=blue>map</font>[string]<font color=blue>interface</font>{}
+
+    }
+    class ProcessLifeCycleEvent << (S,Aquamarine) >> {
+        + ProcessId string
+        + Step string
+        + Status enums.PROCESS_STATUS
+        + Next []string
+        + Agent string
+        + CreatedAt time.Time
+
+    }
+    class Resource << (S,Aquamarine) >> {
+        + Step string
+        + ProcessId string
+        + Descriptors *[]unstructured.Unstructured
+        + Type enums.RESOURCE_TYPE
+        + Name string
+        + Namespace string
+        + Replica int32
+        + Images []string
+
+    }
+    class Subject << (S,Aquamarine) >> {
+        + Step string
+        + Name string
+        + EventData <font color=blue>map</font>[string]<font color=blue>interface</font>{}
+        + ProcessLabel <font color=blue>map</font>[string]string
+
+    }
+    class resourceApi << (S,Aquamarine) >> {
+        - resourceService service.Resource
+
+        + Update(context echo.Context) error
+
+    }
+}
+
+"api.Resource" <|-- "v1.resourceApi"
+
+"__builtin__.string" #.. "enums.PIPELINE_STATUS"
+"__builtin__.string" #.. "enums.PROCESS_STATUS"
+"__builtin__.string" #.. "enums.RESOURCE_TYPE"
+@enduml
