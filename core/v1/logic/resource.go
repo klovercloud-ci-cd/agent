@@ -2,11 +2,11 @@ package logic
 
 import (
 	"encoding/json"
-	"github.com/klovercloud-ci/api/common"
-	"github.com/klovercloud-ci/config"
-	v1 "github.com/klovercloud-ci/core/v1"
-	"github.com/klovercloud-ci/core/v1/service"
-	"github.com/klovercloud-ci/enums"
+	"github.com/klovercloud-ci-cd/agent/api/common"
+	"github.com/klovercloud-ci-cd/agent/config"
+	v1 "github.com/klovercloud-ci-cd/agent/core/v1"
+	"github.com/klovercloud-ci-cd/agent/core/v1/service"
+	"github.com/klovercloud-ci-cd/agent/enums"
 	"log"
 )
 

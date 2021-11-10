@@ -1,10 +1,10 @@
 package v1
 
 import (
-	"github.com/klovercloud-ci/api/common"
-	v1 "github.com/klovercloud-ci/core/v1"
-	"github.com/klovercloud-ci/core/v1/api"
-	"github.com/klovercloud-ci/core/v1/service"
+	"github.com/klovercloud-ci-cd/agent/api/common"
+	v1 "github.com/klovercloud-ci-cd/agent/core/v1"
+	"github.com/klovercloud-ci-cd/agent/core/v1/api"
+	"github.com/klovercloud-ci-cd/agent/core/v1/service"
 	"github.com/labstack/echo/v4"
 	"log"
 )

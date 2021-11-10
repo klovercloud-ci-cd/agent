@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"github.com/klovercloud-ci/dependency"
+	"github.com/klovercloud-ci-cd/agent/dependency"
 	"github.com/labstack/echo/v4"
 )
 

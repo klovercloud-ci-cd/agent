@@ -1,9 +1,9 @@
 package v1
 
 import (
-	"github.com/klovercloud-ci/api/common"
-	"github.com/klovercloud-ci/config"
-	"github.com/klovercloud-ci/dependency"
+	"github.com/klovercloud-ci-cd/agent/api/common"
+	"github.com/klovercloud-ci-cd/agent/config"
+	"github.com/klovercloud-ci-cd/agent/dependency"
 	"github.com/labstack/echo/v4"
 )
 

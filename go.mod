@@ -1,4 +1,4 @@
-module github.com/klovercloud-ci
+module github.com/klovercloud-ci-cd/agent
 
 go 1.15
 

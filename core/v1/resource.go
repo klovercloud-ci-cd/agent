@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"github.com/klovercloud-ci/enums"
+	"github.com/klovercloud-ci-cd/agent/enums"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 

@@ -3,7 +3,7 @@ package logic
 import (
 	"bytes"
 	"errors"
-	"github.com/klovercloud-ci/core/v1/service"
+	"github.com/klovercloud-ci-cd/agent/core/v1/service"
 	"io/ioutil"
 	"log"
 	"net/http"

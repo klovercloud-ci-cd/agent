@@ -2,9 +2,9 @@ package logic
 
 import (
 	"encoding/json"
-	"github.com/klovercloud-ci/config"
-	"github.com/klovercloud-ci/core/v1"
-	"github.com/klovercloud-ci/core/v1/service"
+	"github.com/klovercloud-ci-cd/agent/config"
+	"github.com/klovercloud-ci-cd/agent/core/v1"
+	"github.com/klovercloud-ci-cd/agent/core/v1/service"
 	"log"
 )
 

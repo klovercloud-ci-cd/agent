@@ -1,7 +1,7 @@
 package api
 
 import (
-	v1 "github.com/klovercloud-ci/api/v1"
+	v1 "github.com/klovercloud-ci-cd/agent/api/v1"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

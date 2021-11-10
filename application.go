@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/klovercloud-ci/api"
-	"github.com/klovercloud-ci/config"
-	"github.com/klovercloud-ci/dependency"
-	"github.com/klovercloud-ci/core/v1/service"
+	"github.com/klovercloud-ci-cd/agent/api"
+	"github.com/klovercloud-ci-cd/agent/config"
+	"github.com/klovercloud-ci-cd/agent/core/v1/service"
+	"github.com/klovercloud-ci-cd/agent/dependency"
 	"time"
 )
 

@@ -3,9 +3,9 @@ package logic
 import (
 	"context"
 	"fmt"
-	v1 "github.com/klovercloud-ci/core/v1"
-	"github.com/klovercloud-ci/core/v1/service"
-	"github.com/klovercloud-ci/enums"
+	v1 "github.com/klovercloud-ci-cd/agent/core/v1"
+	"github.com/klovercloud-ci-cd/agent/core/v1/service"
+	"github.com/klovercloud-ci-cd/agent/enums"
 	apiV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
