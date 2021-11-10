@@ -21,7 +21,7 @@ func (r resourceService) Pull() {
 	header := make(map[string]string)
 	header["Accept"] = "application/json"
 	header["token"] = config.Token
-	err, data := r.httpClient.Get(url, header)
+	data, err := r.httpClient.Get(url, header)
 	if err != nil {
 		// send to observer
 		log.Println(err.Error())
