@@ -20,7 +20,7 @@ definitions:
     properties:
       _metadata:
         $ref: '#/definitions/common.MetaData'
-      data: { }
+      data: {}
       message:
         type: string
       status:
@@ -60,20 +60,22 @@ definitions:
         type: string
     type: object
 info:
-  contact: { }
+  contact: {}
+  description: agent API
+  title: agent API
 paths:
   /api/v1/resources/{processId}:
     post:
       description: Apply resources
       parameters:
-        - description: Resource Data
-          in: body
-          name: data
-          required: true
-          schema:
-            $ref: '#/definitions/v1.Resource'
+      - description: Resource Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/v1.Resource'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
@@ -81,5 +83,5 @@ paths:
             $ref: '#/definitions/common.ResponseDTO'
       summary: Apply resources
       tags:
-        - Resource
+      - Resource
 swagger: "2.0"

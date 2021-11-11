@@ -160,8 +160,8 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "",
 	BasePath:    "",
 	Schemes:     []string{},
-	Title:       "",
-	Description: "",
+	Title:       "agent API",
+	Description: "agent API",
 }
 
 type s struct{}
