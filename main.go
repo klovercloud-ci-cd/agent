@@ -8,6 +8,7 @@ import (
 	_ "github.com/klovercloud-ci-cd/agent/docs"
 	"time"
 )
+
 // @title agent API
 // @description agent API
 func main() {
