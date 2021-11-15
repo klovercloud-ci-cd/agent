@@ -56,6 +56,11 @@ func (r resourceService) Update(resource v1.Resource) error {
 	for _, each := range *resource.Descriptors {
 		r.K8s.Apply(each)
 	}
+	if resource.Name == "" {
+		subject := v1.Subject{resource.Step, "Updated Successfully", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"log": "Updated Successfully", "reason": "n/a", "status": enums.SUCCESSFUL}, nil}
+		go r.notifyAll(subject)
+		return nil
+	}
 	if resource.Type == enums.DEPLOYMENT {
 		return r.K8s.UpdateDeployment(resource)
 	} else if resource.Type == enums.POD {
