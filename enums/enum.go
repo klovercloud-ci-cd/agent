@@ -42,4 +42,6 @@ const (
 	COMPLETED = PROCESS_STATUS("completed")
 	// FAILED pipeline steps status failed
 	FAILED = PROCESS_STATUS("failed")
+	// COMPLETED pipeline steps status completed
+	PAUSED = PROCESS_STATUS("paused")
 )

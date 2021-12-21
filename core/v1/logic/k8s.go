@@ -80,7 +80,7 @@ func (k k8sService) Deploy(data *unstructured.Unstructured) (bool, error) {
 }
 
 func (k k8sService) UpdateDeployment(resource v1.Resource) error {
-	subject := v1.Subject{resource.Step, "", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"log": "Initiating  deployment ...", "reason": "n/a"}, nil}
+	subject := v1.Subject{resource.Step, "", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"log": "Initiating  deployment ...", "reason": "n/a"}, nil,resource.Pipeline}
 	subject.EventData["status"] = enums.INITIALIZING
 	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {

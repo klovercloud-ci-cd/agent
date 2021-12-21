@@ -15,4 +15,18 @@ type Resource struct {
 	Namespace   string                       `json:"namespace"`
 	Replica     int32                        `json:"replica"`
 	Images      []string                     `json:"images"`
+	Pipeline  *Pipeline            `bson:"pipeline" json :"pipeline"`
+}
+// Pipeline pipeline stuct
+type Pipeline struct {
+	ApiVersion string              `json:"api_version" yaml:"api_version"`
+	Name       string              `json:"name"  yaml:"name"`
+	ProcessId  string              `json:"process_id" yaml:"process_id"`
+	Steps      []Step              `json:"steps" yaml:"steps"`
+}
+
+// Step pipeline step.
+type Step struct {
+	Name    string                  `json:"name" yaml:"name"`
+	Next    []string                `json:"next" yaml:"next"`
 }

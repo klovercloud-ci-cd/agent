@@ -57,7 +57,7 @@ func (r resourceService) Update(resource v1.Resource) error {
 		r.K8s.Apply(each)
 	}
 	if resource.Name == "" {
-		subject := v1.Subject{resource.Step, "Updated Successfully", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"log": "Updated Successfully", "reason": "n/a", "status": enums.SUCCESSFUL}, nil}
+		subject := v1.Subject{resource.Step, "Updated Successfully", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"log": "Updated Successfully", "reason": "n/a", "status": enums.SUCCESSFUL}, nil,resource.Pipeline}
 		go r.notifyAll(subject)
 		return nil
 	}

@@ -6,4 +6,5 @@ type Subject struct {
 	Name, Namespace, ProcessId string
 	EventData                  map[string]interface{}
 	ProcessLabel               map[string]string
+	Pipeline *Pipeline
 }

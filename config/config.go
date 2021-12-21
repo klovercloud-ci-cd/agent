@@ -10,7 +10,7 @@ import (
 // ServerPort refers to server port.
 var ServerPort string
 
-// EventStoreUrl refers to event-store url.
+// EventStoreUrl refers to event-bank url.
 var EventStoreUrl string
 
 // PullSize refers to number of job to be pulled each time.

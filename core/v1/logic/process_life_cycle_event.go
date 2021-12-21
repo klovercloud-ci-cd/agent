@@ -26,9 +26,14 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 			Step:      subject.Step,
 			CreatedAt: time.Now().UTC(),
 		}
-		nestStepNameMap := make(map[string]bool)
-		for _, name := range processLifeCycleEvent.Next {
-			nestStepNameMap[name] = true
+		nextSteps:=[] string{}
+
+		if subject.Pipeline!=nil{
+			for _,step:=range subject.Pipeline.Steps{
+				if step.Name==subject.Step{
+					nextSteps= append(nextSteps, step.Next...)
+				}
+			}
 		}
 		if subject.EventData["status"] == enums.DEPLOYMENT_FAILED || subject.EventData["status"] == enums.ERROR || subject.EventData["status"] == enums.TERMINATING {
 			processLifeCycleEvent.Status = enums.FAILED
@@ -36,6 +41,13 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 		} else if subject.EventData["status"] == enums.SUCCESSFUL {
 			processLifeCycleEvent.Status = enums.COMPLETED
 			data = append(data, processLifeCycleEvent)
+			for _,each := range nextSteps {
+				data = append(data, v1.ProcessLifeCycleEvent{
+					ProcessId: subject.ProcessId,
+					Status:    enums.PAUSED,
+					Step:      each,
+				})
+			}
 		} else {
 			return
 		}
