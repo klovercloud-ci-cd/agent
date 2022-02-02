@@ -23,7 +23,7 @@ spec:
       containers:
         - name: app
           imagePullPolicy: Always
-          image: klovercloud/ci-agent:v0.1.0
+          image: quay.io/klovercloud/ci-agent:v1.0.0
           resources:
             limits:
               cpu: 100m

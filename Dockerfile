@@ -21,4 +21,4 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 WORKDIR /app
 COPY --from=builder /app/bin /app
 EXPOSE 8080
-CMD ["./ci-agent"]
+CMD ["./klovercloud-ci-agent"]
