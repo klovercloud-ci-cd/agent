@@ -4,6 +4,7 @@ metadata:
   name: klovercloud-ci-agent-envar-config
   namespace: klovercloud
 data:
+  RUN_MODE: "PRODUCTION"
   SERVER_PORT: "8080"
   EVENT_STORE_URL: "http://ci-event-store/api/v1"
   AGENT_NAME: "local_agent"

@@ -45,3 +45,15 @@ const (
 	// COMPLETED pipeline steps status completed
 	PAUSED = PROCESS_STATUS("paused")
 )
+
+// ENVIRONMENT run environment
+type ENVIRONMENT string
+
+const (
+	// PRODUCTION production environment
+	PRODUCTION = ENVIRONMENT("PRODUCTION")
+	// DEVELOP development environment
+	DEVELOP = ENVIRONMENT("DEVELOP")
+	// TEST test environment
+	TEST = ENVIRONMENT("TEST")
+)

@@ -2,10 +2,14 @@ package config
 
 import (
 	"github.com/joho/godotenv"
+	"github.com/klovercloud-ci-cd/agent/enums"
 	"log"
 	"os"
 	"strings"
 )
+
+// RunMode refers to run mode.
+var RunMode string
 
 // ServerPort refers to server port.
 var ServerPort string
@@ -33,11 +37,20 @@ var Token string
 
 // InitEnvironmentVariables initializes environment variables
 func InitEnvironmentVariables() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("ERROR:", err.Error())
-		return
+	RunMode = os.Getenv("RUN_MODE")
+	if RunMode == "" {
+		RunMode = string(enums.DEVELOP)
 	}
+
+	if RunMode != string(enums.PRODUCTION) {
+		//Load .env file
+		err := godotenv.Load()
+		if err != nil {
+			log.Println("ERROR:", err.Error())
+			return
+		}
+	}
+	log.Println("RUN MODE:", RunMode)
 	EventStoreUrl = os.Getenv("EVENT_STORE_URL")
 	if strings.HasPrefix(EventStoreUrl, "/") {
 		EventStoreUrl = strings.TrimPrefix(EventStoreUrl, "/")
