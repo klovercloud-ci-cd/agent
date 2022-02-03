@@ -2,8 +2,13 @@ package logic
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"github.com/klovercloud-ci-cd/agent/config"
 	"github.com/klovercloud-ci-cd/agent/core/v1/service"
+	"github.com/klovercloud-ci-cd/agent/opentracing"
+	opentracer "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -20,6 +25,7 @@ func (h httpClientService) Post(url string, header map[string]string, body []byt
 		req.Header.Set(k, v)
 	}
 	client := &http.Client{}
+	startTraceSpan(req,url,"POST")
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -48,6 +54,7 @@ func (h httpClientService) Get(url string, header map[string]string) ([]byte, er
 	for k, v := range header {
 		req.Header.Set(k, v)
 	}
+	startTraceSpan(req,url,"GET")
 	res, err := client.Do(req)
 	if err != nil {
 		log.Println(err.Error())
@@ -64,6 +71,21 @@ func (h httpClientService) Get(url string, header map[string]string) ([]byte, er
 	}
 	return nil, errors.New("Status: " + res.Status + ", code: " + strconv.Itoa(res.StatusCode))
 }
+
+// startTraceSpan starts a span
+func startTraceSpan(req *http.Request,url, httpMethod string){
+	if config.EnableOpenTracing {
+		span, _ := opentracer.StartSpanFromContext(context.Background(), "client")
+		ext.SpanKindRPCClient.Set(span)
+		ext.HTTPUrl.Set(span, url)
+		ext.HTTPMethod.Set(span, httpMethod)
+		defer span.Finish()
+		if err := opentracing.Inject(span, req); err != nil {
+			log.Println(err.Error())
+		}
+	}
+}
+
 
 // NewHttpClientService returns HttpClient type service
 func NewHttpClientService() service.HttpClient {
