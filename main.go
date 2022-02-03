@@ -6,6 +6,7 @@ import (
 	"github.com/klovercloud-ci-cd/agent/core/v1/service"
 	"github.com/klovercloud-ci-cd/agent/dependency"
 	_ "github.com/klovercloud-ci-cd/agent/docs"
+	"github.com/labstack/echo-contrib/jaegertracing"
 	"time"
 )
 
@@ -13,6 +14,10 @@ import (
 // @description agent API
 func main() {
 	e := config.New()
+	if config.EnableOpenTracing {
+		c := jaegertracing.New(e, nil)
+		defer c.Close()
+	}
 	api.Routes(e)
 	resourceService := dependency.GetV1ResourceService()
 	go ContinuePullingAgentEvent(resourceService)
