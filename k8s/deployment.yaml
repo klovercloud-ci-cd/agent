@@ -8,12 +8,6 @@ spec:
   selector:
     matchLabels:
       app: klovercloud-ci-agent
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 2
-      maxUnavailable: 0
-  minReadySeconds: 60
   template:
     metadata:
       labels:
@@ -42,9 +36,10 @@ spec:
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
-          livelinessProbe:
+          livenessProbe:
             httpGet:
               path: /health
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
+      serviceAccountName: klovercloud-ci-agent-sa

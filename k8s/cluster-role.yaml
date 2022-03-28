@@ -8,12 +8,12 @@ metadata:
   name: ci-agent-cluster-role
 rules:
   - apiGroups:
-      - ''
+      - '*'
     resources:
-      - ''
+      - '*'
     verbs:
-      - ''
+      - '*'
   - nonResourceURLs:
-      - ''
+      - '*'
     verbs:
       - '*'
