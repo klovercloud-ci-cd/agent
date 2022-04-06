@@ -57,7 +57,7 @@ func (r resourceService) Update(resource v1.Resource) error {
 		processEventData := make(map[string]interface{})
 		processEventData["step"] = resource.Step
 		processEventData["type"] = resource.Type
-		listener := v1.Subject{Log: "Deploy Step Starting", ProcessId: resource.ProcessId}
+		listener := v1.Subject{Log: "Deploy Step Started", ProcessId: resource.ProcessId}
 		listener.EventData = processEventData
 		go r.notifyAll(listener)
 		r.K8s.Apply(each)

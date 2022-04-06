@@ -5,4 +5,4 @@
 *.ini
 /out/
 *.exe
-/kss/
+/k8s/
