@@ -7,6 +7,7 @@ import (
 	"github.com/klovercloud-ci-cd/agent/dependency"
 	_ "github.com/klovercloud-ci-cd/agent/docs"
 	"github.com/labstack/echo-contrib/jaegertracing"
+	"io"
 	"time"
 )
 
@@ -16,7 +17,12 @@ func main() {
 	e := config.New()
 	if config.EnableOpenTracing {
 		c := jaegertracing.New(e, nil)
-		defer c.Close()
+		defer func(c io.Closer) {
+			err := c.Close()
+			if err != nil {
+				panic(err)
+			}
+		}(c)
 	}
 	api.Routes(e)
 	resourceService := dependency.GetV1ResourceService()

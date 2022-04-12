@@ -17,7 +17,7 @@ type resourceService struct {
 }
 
 func (r resourceService) Pull() {
-	url := config.EventStoreUrl + "/process_life_cycle_events?count=" + config.PullSize + "&agent=" + config.AgentName
+	url := config.ApiServiceUrl + "/process_life_cycle_events?count=" + config.PullSize + "&agent=" + config.AgentName
 	header := make(map[string]string)
 	header["Accept"] = "application/json"
 	header["token"] = config.Token

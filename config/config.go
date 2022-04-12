@@ -14,8 +14,8 @@ var RunMode string
 // ServerPort refers to server port.
 var ServerPort string
 
-// EventStoreUrl refers to event-bank url.
-var EventStoreUrl string
+// ApiServiceUrl refers to api service url.
+var ApiServiceUrl string
 
 // PullSize refers to number of job to be pulled each time.
 var PullSize string
@@ -34,7 +34,6 @@ var EnableAuthentication bool
 
 // Token refers to oauth token for service to service communication.
 var Token string
-
 
 // EnableOpenTracing set true if opentracing is needed.
 var EnableOpenTracing bool
@@ -55,9 +54,9 @@ func InitEnvironmentVariables() {
 		}
 	}
 	log.Println("RUN MODE:", RunMode)
-	EventStoreUrl = os.Getenv("EVENT_STORE_URL")
-	if strings.HasPrefix(EventStoreUrl, "/") {
-		EventStoreUrl = strings.TrimPrefix(EventStoreUrl, "/")
+	ApiServiceUrl = os.Getenv("API_SERVICE_URL")
+	if strings.HasPrefix(ApiServiceUrl, "/") {
+		ApiServiceUrl = strings.TrimPrefix(ApiServiceUrl, "/")
 	}
 	ServerPort = os.Getenv("SERVER_PORT")
 	AgentName = os.Getenv("AGENT_NAME")
@@ -75,10 +74,9 @@ func InitEnvironmentVariables() {
 	}
 	Token = os.Getenv("TOKEN")
 
-
-	if os.Getenv("ENABLE_OPENTRACING")==""{
-		EnableOpenTracing=false
-	}else{
+	if os.Getenv("ENABLE_OPENTRACING") == "" {
+		EnableOpenTracing = false
+	} else {
 		if strings.ToLower(os.Getenv("ENABLE_OPENTRACING")) == "true" {
 			EnableOpenTracing = true
 		} else {
