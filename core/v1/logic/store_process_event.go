@@ -26,7 +26,8 @@ func (e eventStoreProcessService) Listen(subject v1.Subject) {
 			log.Println(err.Error())
 			return
 		}
-		e.httpPublisher.Post(config.EventStoreUrl+"/processes_events", header, b)
+		e.httpPublisher.Post(config.ApiServiceUrl+"/processes_events", header, b)
+
 	}
 }
 

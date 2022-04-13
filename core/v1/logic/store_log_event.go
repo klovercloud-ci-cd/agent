@@ -28,7 +28,7 @@ func (e eventStoreEventService) Listen(subject v1.Subject) {
 		log.Println(err.Error())
 		return
 	}
-	e.httpPublisher.Post(config.EventStoreUrl+"/logs", header, b)
+	e.httpPublisher.Post(config.ApiServiceUrl+"/logs", header, b)
 }
 
 // NewEventStoreLogEventService returns Observer type service

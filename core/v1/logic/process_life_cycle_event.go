@@ -26,12 +26,12 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 			Step:      subject.Step,
 			CreatedAt: time.Now().UTC(),
 		}
-		nextSteps:=[] string{}
+		nextSteps := []string{}
 
-		if subject.Pipeline!=nil{
-			for _,step:=range subject.Pipeline.Steps{
-				if step.Name==subject.Step{
-					nextSteps= append(nextSteps, step.Next...)
+		if subject.Pipeline != nil {
+			for _, step := range subject.Pipeline.Steps {
+				if step.Name == subject.Step {
+					nextSteps = append(nextSteps, step.Next...)
 				}
 			}
 		}
@@ -41,7 +41,7 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 		} else if subject.EventData["status"] == enums.SUCCESSFUL {
 			processLifeCycleEvent.Status = enums.COMPLETED
 			data = append(data, processLifeCycleEvent)
-			for _,each := range nextSteps {
+			for _, each := range nextSteps {
 				data = append(data, v1.ProcessLifeCycleEvent{
 					ProcessId: subject.ProcessId,
 					Status:    enums.PAUSED,
@@ -52,7 +52,7 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 			return
 		}
 		type ProcessLifeCycleEventList struct {
-			Events []v1.ProcessLifeCycleEvent `bson:"events" json :"events"`
+			Events []v1.ProcessLifeCycleEvent `bson:"events" json:"events"`
 		}
 		if len(data) > 0 {
 			events := ProcessLifeCycleEventList{data}
@@ -64,7 +64,7 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 				log.Println(err.Error())
 				return
 			}
-			e.httpPublisher.Post(config.EventStoreUrl+"/process_life_cycle_events", header, b)
+			e.httpPublisher.Post(config.ApiServiceUrl+"/process_life_cycle_events", header, b)
 		}
 	}
 }
