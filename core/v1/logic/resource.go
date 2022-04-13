@@ -20,7 +20,7 @@ func (r resourceService) Pull() {
 	url := config.ApiServiceUrl + "/process_life_cycle_events?count=" + config.PullSize + "&agent=" + config.AgentName
 	header := make(map[string]string)
 	header["Accept"] = "application/json"
-	header["token"] = config.Token
+	header["Authorization"] = "Bearer " + config.Token
 	data, err := r.httpClient.Get(url, header)
 	if err != nil {
 		// send to observer

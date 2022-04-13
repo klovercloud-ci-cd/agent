@@ -20,7 +20,7 @@ func (e eventStoreProcessService) Listen(subject v1.Subject) {
 		}
 		header := make(map[string]string)
 		header["Content-Type"] = "application/json"
-		header["token"] = config.Token
+		header["Authorization"] = "Bearer " + config.Token
 		b, err := json.Marshal(event)
 		if err != nil {
 			log.Println(err.Error())
