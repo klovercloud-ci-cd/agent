@@ -2,6 +2,7 @@ package logic
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/klovercloud-ci-cd/agent/config"
 	v1 "github.com/klovercloud-ci-cd/agent/core/v1"
 	"github.com/klovercloud-ci-cd/agent/core/v1/service"
@@ -18,6 +19,7 @@ func (e eventStoreEventService) Listen(subject v1.Subject) {
 		ProcessId: subject.ProcessId,
 		Log:       subject.Log,
 		Step:      subject.Step,
+		Footmark:  fmt.Sprint(subject.EventData["footmark"]),
 		CreatedAt: time.Time{}.UTC(),
 	}
 	header := make(map[string]string)

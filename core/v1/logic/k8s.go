@@ -2,6 +2,8 @@ package logic
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	v1 "github.com/klovercloud-ci-cd/agent/core/v1"
 	"github.com/klovercloud-ci-cd/agent/core/v1/service"
@@ -11,13 +13,18 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/strategicpatch"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
 	"log"
 	"strings"
+	"time"
 )
 
 type k8sService struct {
@@ -80,7 +87,7 @@ func (k k8sService) Deploy(data *unstructured.Unstructured) (bool, error) {
 }
 
 func (k k8sService) UpdateDeployment(resource v1.Resource) error {
-	subject := v1.Subject{resource.Step, "", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"log": "Initiating  deployment ...", "reason": "n/a"}, nil,resource.Pipeline}
+	subject := v1.Subject{resource.Step, "", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"footmark":enums.UPDATE_RESOURCE,"log": "Initiating  deployment ...", "reason": "n/a"}, nil,resource.Pipeline}
 	subject.EventData["status"] = enums.INITIALIZING
 	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -89,37 +96,86 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 			log.Println("Failed to get latest version of Deployment: ", getErr)
 			subject.Log = "Failed to get latest version of Deployment: " + getErr.Error()
 			subject.EventData["log"] = subject.Log
+			subject.EventData["footmark"] = enums.POST_AGENT_JOB
 			subject.EventData["status"] = enums.DEPLOYMENT_FAILED
 			go k.notifyAll(subject)
 			return getErr
 		}
-		result.Spec.Replicas = &resource.Replica
 		for i, each := range resource.Images {
 			if i > len(result.Spec.Template.Spec.Containers)-1 {
 				subject.Log = "index out of bound! ignoring container for " + each
 				subject.EventData["log"] = subject.Log
+				subject.EventData["footmark"] = enums.UPDATE_RESOURCE
 				subject.EventData["status"] = enums.PROCESSING
 				go k.notifyAll(subject)
 			} else {
 				result.Spec.Template.Spec.Containers[i].Image = each
 			}
 		}
-		_, updateErr := k.kcs.AppsV1().Deployments(resource.Namespace).Update(context.TODO(), result, metav1.UpdateOptions{})
+
+		listOptions := metav1.ListOptions{LabelSelector: labels.FormatLabels(result.Labels)}
+		podList, err := k.kcs.CoreV1().Pods(resource.Namespace).List(context.TODO(),listOptions)
+		if err!=nil{
+			subject.Log = "Failed to list Existing Pods!"
+			subject.EventData["log"] = err.Error()
+			subject.EventData["footmark"] = enums.POST_AGENT_JOB
+			subject.EventData["status"] = enums.PROCESSING
+			go k.notifyAll(subject)
+		}
+		existingPodName:=make(map[string]bool)
+
+		for _,each:=range podList.Items{
+			existingPodName[each.Name]=true
+		}
+		prev, _ := k.GetDeployment(resource.Name, resource.Namespace)
+		deploy,updateErr:=k.PatchDeploymentObject(prev,result)
+		if updateErr!=nil {
+			log.Println("patchError:",err.Error())
+		}
+		if updateErr==nil && *deploy.Spec.Replicas>0{
+			subject.Log = "Waiting until pod is ready!"
+			subject.EventData["log"] = subject.Log
+			subject.EventData["footmark"] = enums.POST_AGENT_JOB
+			subject.EventData["status"] = enums.PROCESSING
+			go k.notifyAll(subject)
+			var timeout = 30
+			err := k.WaitForPodBySelectorRunning(resource.Step,deploy.Name,deploy.Namespace,resource.ProcessId ,labels.FormatLabels(deploy.Labels), timeout,existingPodName)
+			if err != nil {
+				return err
+			}
+		}
 		return updateErr
 	})
 	if retryErr != nil {
-		subject.Log = "Update failed: " + retryErr.Error()
-		subject.EventData["log"] = subject.Log
-		subject.EventData["status"] = enums.DEPLOYMENT_FAILED
-		go k.notifyAll(subject)
 		return retryErr
 	}
 
 	subject.Log = "Updated Successfully"
 	subject.EventData["log"] = subject.Log
+	subject.EventData["footmark"] = enums.POST_AGENT_JOB
 	subject.EventData["status"] = enums.SUCCESSFUL
 	go k.notifyAll(subject)
 	return nil
+}
+
+func(k k8sService) PatchDeploymentObject(cur, mod *apiV1.Deployment) (*apiV1.Deployment, error) {
+	curJson, err := json.Marshal(cur)
+	if err != nil {
+		return nil, err
+	}
+	modJson, err := json.Marshal(mod)
+	if err != nil {
+		return nil, err
+	}
+	patch, err := strategicpatch.CreateTwoWayMergePatch(curJson, modJson, apiV1.Deployment{})
+	if err != nil {
+		return nil, err
+	}
+	if len(patch) == 0 || string(patch) == "{}" {
+		return cur, nil
+	}
+	out, err := k.kcs.AppsV1().Deployments(cur.Namespace).Patch(context.TODO(),cur.Name, types.StrategicMergePatchType, patch,metav1.PatchOptions{})
+	return out, err
 }
 
 func (k k8sService) UpdatePod(resource v1.Resource) error {
@@ -199,6 +255,89 @@ func (k k8sService) GetDaemonSet(name, namespace string) (*apiV1.DaemonSet, erro
 	return k.kcs.AppsV1().DaemonSets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 }
 
+func (k k8sService) isPodRunning(podName, namespace string) wait.ConditionFunc {
+	return func() (bool, error) {
+		fmt.Printf(".") // progress bar!
+
+		pod, err := k.kcs.CoreV1().Pods(namespace).Get(context.Background(),podName, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		//status:=pod.Status.ContainerStatuses
+		//if  status[0].State.Waiting!=nil{
+		//	log.Println(status[0].State.Waiting.Reason)
+		//}
+
+		for _,each:=range pod.Status.ContainerStatuses{
+			if each.State.Waiting!=nil{
+				if each.State.Waiting.Reason=="ImagePullBackOff"{
+					return true, errors.New("Pod has error: ImagePullBackOff")
+				}else if each.State.Waiting.Reason=="CrashLoopBackOff"{
+					return true, errors.New("Pod has error: CrashLoopBackOff")
+				}
+			}
+		}
+
+		switch pod.Status.Phase {
+			case coreV1.PodRunning:
+				return true, nil
+			case coreV1.PodFailed, coreV1.PodSucceeded:
+				return false, errors.New("Pod has error!")
+		}
+		return false, nil
+	}
+}
+
+func (k k8sService) waitForPodRunning( namespace, podName string, timeout time.Duration) error {
+	return wait.PollImmediate(time.Second, timeout, k.isPodRunning( podName, namespace))
+}
+
+func (k k8sService) ListPods(retryCount int,namespace, selector string,  existingPodMap map[string]bool) (*coreV1.PodList, error) {
+	listOptions := metav1.ListOptions{LabelSelector: selector}
+	podList, err := k.kcs.CoreV1().Pods(namespace).List(context.Background(),listOptions)
+	if err != nil {
+		return nil, err
+	}
+	var newPods []string
+
+	for _,each:=range podList.Items{
+		if _,ok:=existingPodMap[each.Name];ok{
+			continue
+		}
+		newPods= append(newPods, each.Name)
+	}
+	if len(newPods)==0 && retryCount<10{
+		time.Sleep(time.Second*2)
+		retryCount=retryCount+1
+		return k.ListPods(retryCount,namespace,selector,existingPodMap)
+	}
+	return podList, nil
+}
+
+func(k k8sService)  WaitForPodBySelectorRunning(step,name,namespace,processId, selector string, timeout int,existingPods map[string]bool) error {
+	subject := v1.Subject{step, "", name, namespace, processId, map[string]interface{}{"footmark":enums.UPDATE_RESOURCE,"log": "Listing Pods ...", "reason": "n/a"}, nil,nil}
+	subject.Log = "Listing Pods ... !"
+	subject.EventData["log"] = subject.Log
+	subject.EventData["footmark"] = enums.POST_AGENT_JOB
+	subject.EventData["status"] = enums.PROCESSING
+	go k.notifyAll(subject)
+	podList, err := k.ListPods(0,namespace, selector,existingPods)
+	if err != nil {
+		return err
+	}
+	if len(podList.Items) == 0 {
+		return fmt.Errorf("no pods in %s with selector %s", namespace, selector)
+	}
+
+	for _, pod := range podList.Items {
+		if err := k.waitForPodRunning( namespace, pod.Name, time.Duration(timeout)*time.Second); err != nil {
+			log.Println(err.Error())
+			return err
+		}
+	}
+	return nil
+}
 func (k k8sService) notifyAll(subject v1.Subject) {
 	for _, observer := range k.observerList {
 		go observer.Listen(subject)
