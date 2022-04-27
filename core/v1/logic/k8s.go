@@ -87,7 +87,11 @@ func (k k8sService) Deploy(data *unstructured.Unstructured) (bool, error) {
 }
 
 func (k k8sService) UpdateDeployment(resource v1.Resource) error {
-	subject := v1.Subject{resource.Step, "", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"footmark":enums.UPDATE_RESOURCE,"log": "Initiating  deployment ...", "reason": "n/a"}, nil,resource.Pipeline}
+	subject := v1.Subject{resource.Step, "Initiating  deployment ...", resource.Name, resource.Namespace, resource.ProcessId, nil, nil,resource.Pipeline}
+	subject.EventData=make(map[string]interface{})
+	subject.EventData["footmark"] =enums.UPDATE_RESOURCE
+	subject.EventData["log"]=subject.Log
+	subject.EventData["reason"]="n/a"
 	subject.EventData["status"] = enums.INITIALIZING
 	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -139,7 +143,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 			subject.EventData["status"] = enums.PROCESSING
 			go k.notifyAll(subject)
 			var timeout = 30
-			err := k.WaitForPodBySelectorRunning(resource.Step,deploy.Name,deploy.Namespace,resource.ProcessId ,labels.FormatLabels(deploy.Labels), timeout,existingPodName)
+			err := k.WaitForPodBySelectorUntilRunning(resource.Step,deploy.Name,deploy.Namespace,resource.ProcessId ,labels.FormatLabels(deploy.Labels), timeout,existingPodName)
 			if err != nil {
 				return err
 			}
@@ -179,16 +183,29 @@ func(k k8sService) PatchDeploymentObject(cur, mod *apiV1.Deployment) (*apiV1.Dep
 }
 
 func (k k8sService) UpdatePod(resource v1.Resource) error {
+	subject := v1.Subject{resource.Step, "", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"footmark":enums.UPDATE_RESOURCE,"log": "Initiating  deployment ...", "reason": "n/a"}, nil,resource.Pipeline}
+	subject.EventData["status"] = enums.INITIALIZING
+	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		result, getErr := k.GetPod(resource.Name, resource.Namespace)
 		if getErr != nil {
-			log.Println("Failed to get latest version of Deployment: %v", getErr)
+			log.Println("Failed to get latest version of Pod: ", getErr)
+			subject.Log = "Failed to get latest version of Pod: " + getErr.Error()
+			subject.EventData["log"] = subject.Log
+			subject.EventData["footmark"] = enums.POST_AGENT_JOB
+			subject.EventData["status"] = enums.DEPLOYMENT_FAILED
+			go k.notifyAll(subject)
 			return getErr
 		}
+
+
 		for i, each := range resource.Images {
 			result.Spec.Containers[i].Image = each
 		}
+
 		_, updateErr := k.kcs.CoreV1().Pods(resource.Namespace).Update(context.TODO(), result, metav1.UpdateOptions{})
+		k.kcs.CoreV1().Pods(resource.Namespace).Watch(context.TODO(),metav1.ListOptions{})
+
 		return updateErr
 	})
 	if retryErr != nil {
@@ -199,23 +216,72 @@ func (k k8sService) UpdatePod(resource v1.Resource) error {
 }
 
 func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
+	subject := v1.Subject{resource.Step, "Initiating  deployment ...", resource.Name, resource.Namespace, resource.ProcessId, nil, nil,resource.Pipeline}
+	subject.EventData=make(map[string]interface{})
+	subject.EventData["footmark"] =enums.UPDATE_RESOURCE
+	subject.EventData["log"]=subject.Log
+	subject.EventData["reason"]="n/a"
+	subject.EventData["status"] = enums.INITIALIZING
+	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		result, getErr := k.GetStatefulSet(resource.Name, resource.Namespace)
 		if getErr != nil {
-			log.Println("Failed to get latest version of Deployment: %v", getErr)
+			log.Println("Failed to get latest version of StatefulSet: ", getErr)
+			subject.Log = "Failed to get latest version of StatefulSet: " + getErr.Error()
+			subject.EventData["log"] = subject.Log
+			subject.EventData["footmark"] = enums.POST_AGENT_JOB
+			subject.EventData["status"] = enums.DEPLOYMENT_FAILED
+			go k.notifyAll(subject)
 			return getErr
 		}
-		result.Spec.Replicas = &resource.Replica
 		for i, each := range resource.Images {
-			result.Spec.Template.Spec.Containers[i].Image = each
+			if i > len(result.Spec.Template.Spec.Containers)-1 {
+				subject.Log = "index out of bound! ignoring container for " + each
+				subject.EventData["log"] = subject.Log
+				subject.EventData["footmark"] = enums.UPDATE_RESOURCE
+				subject.EventData["status"] = enums.PROCESSING
+				go k.notifyAll(subject)
+			} else {
+				result.Spec.Template.Spec.Containers[i].Image = each
+			}
 		}
-		_, updateErr := k.kcs.AppsV1().StatefulSets(resource.Namespace).Update(context.TODO(), result, metav1.UpdateOptions{})
+		listOptions := metav1.ListOptions{LabelSelector: labels.FormatLabels(result.Labels)}
+		podList, err := k.kcs.CoreV1().Pods(resource.Namespace).List(context.TODO(),listOptions)
+		if err!=nil{
+			subject.Log = "Failed to list Existing Pods!"
+			subject.EventData["log"] = err.Error()
+			subject.EventData["footmark"] = enums.POST_AGENT_JOB
+			subject.EventData["status"] = enums.PROCESSING
+			go k.notifyAll(subject)
+		}
+		existingPodRevisions:=make(map[string]bool)
+		for _,each:=range podList.Items{
+			existingPodRevisions[each.GetResourceVersion()]=true
+		}
+		statefulSet, updateErr := k.kcs.AppsV1().StatefulSets(resource.Namespace).Update(context.TODO(), result, metav1.UpdateOptions{})
+		if updateErr==nil && *statefulSet.Spec.Replicas>0{
+			subject.Log = "Waiting until pod is ready!"
+			subject.EventData["log"] = subject.Log
+			subject.EventData["footmark"] = enums.POST_AGENT_JOB
+			subject.EventData["status"] = enums.PROCESSING
+			go k.notifyAll(subject)
+			var timeout = 30
+			err := k.WaitForPodBySelectorAndRevisionUntilRunning(resource.Step,statefulSet.Name,statefulSet.Namespace,resource.ProcessId ,labels.FormatLabels(statefulSet.Labels), timeout,existingPodRevisions)
+			if err != nil {
+				return err
+			}
+		}
 		return updateErr
 	})
 	if retryErr != nil {
 		log.Println("Update failed: %v", retryErr)
 		return retryErr
 	}
+	subject.Log = "Updated Successfully"
+	subject.EventData["log"] = subject.Log
+	subject.EventData["footmark"] = enums.POST_AGENT_JOB
+	subject.EventData["status"] = enums.SUCCESSFUL
+	go k.notifyAll(subject)
 	return nil
 }
 
@@ -264,11 +330,6 @@ func (k k8sService) isPodRunning(podName, namespace string) wait.ConditionFunc {
 			return false, err
 		}
 
-		//status:=pod.Status.ContainerStatuses
-		//if  status[0].State.Waiting!=nil{
-		//	log.Println(status[0].State.Waiting.Reason)
-		//}
-
 		for _,each:=range pod.Status.ContainerStatuses{
 			if each.State.Waiting!=nil{
 				if each.State.Waiting.Reason=="ImagePullBackOff"{
@@ -293,7 +354,29 @@ func (k k8sService) waitForPodRunning( namespace, podName string, timeout time.D
 	return wait.PollImmediate(time.Second, timeout, k.isPodRunning( podName, namespace))
 }
 
-func (k k8sService) ListPods(retryCount int,namespace, selector string,  existingPodMap map[string]bool) (*coreV1.PodList, error) {
+func (k k8sService) ListNewPodsByRevision(retryCount int,namespace, selector string,  revision map[string]bool) (*coreV1.PodList, error) {
+	listOptions := metav1.ListOptions{LabelSelector: selector}
+	podList, err := k.kcs.CoreV1().Pods(namespace).List(context.Background(),listOptions)
+	if err != nil {
+		return nil, err
+	}
+	var newPods []string
+
+	for _,each:=range podList.Items{
+		if _,ok:=revision[each.GetResourceVersion()];ok{
+			continue
+		}
+		newPods= append(newPods, each.Name)
+	}
+	if len(newPods)==0 && retryCount<10{
+		time.Sleep(time.Second*2)
+		retryCount=retryCount+1
+		return k.ListNewPods(retryCount,namespace,selector,revision)
+	}
+	return podList, nil
+}
+
+func (k k8sService) ListNewPods(retryCount int,namespace, selector string,  existingPodMap map[string]bool) (*coreV1.PodList, error) {
 	listOptions := metav1.ListOptions{LabelSelector: selector}
 	podList, err := k.kcs.CoreV1().Pods(namespace).List(context.Background(),listOptions)
 	if err != nil {
@@ -310,19 +393,47 @@ func (k k8sService) ListPods(retryCount int,namespace, selector string,  existin
 	if len(newPods)==0 && retryCount<10{
 		time.Sleep(time.Second*2)
 		retryCount=retryCount+1
-		return k.ListPods(retryCount,namespace,selector,existingPodMap)
+		return k.ListNewPods(retryCount,namespace,selector,existingPodMap)
 	}
 	return podList, nil
 }
 
-func(k k8sService)  WaitForPodBySelectorRunning(step,name,namespace,processId, selector string, timeout int,existingPods map[string]bool) error {
-	subject := v1.Subject{step, "", name, namespace, processId, map[string]interface{}{"footmark":enums.UPDATE_RESOURCE,"log": "Listing Pods ...", "reason": "n/a"}, nil,nil}
-	subject.Log = "Listing Pods ... !"
+func(k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(step,name,namespace,processId, selector string, timeout int,revisions map[string]bool) error {
+	subject := v1.Subject{step, "Listing Pods ...", name, namespace, processId, nil, nil,nil}
+	subject.EventData=make(map[string]interface{})
 	subject.EventData["log"] = subject.Log
 	subject.EventData["footmark"] = enums.POST_AGENT_JOB
 	subject.EventData["status"] = enums.PROCESSING
+	subject.EventData["reason"]="n/a"
 	go k.notifyAll(subject)
-	podList, err := k.ListPods(0,namespace, selector,existingPods)
+	podList, err := k.ListNewPodsByRevision(0,namespace, selector,revisions)
+	if err != nil {
+		return err
+	}
+	if len(podList.Items) == 0 {
+		return fmt.Errorf("no pods in %s with selector %s", namespace, selector)
+	}
+	for _, pod := range podList.Items {
+		subject.Log="Waiting until pods are ready ..."
+		subject.EventData["log"] = subject.Log
+		go k.notifyAll(subject)
+		if err := k.waitForPodRunning( namespace, pod.Name, time.Duration(timeout)*time.Second); err != nil {
+			log.Println(err.Error())
+			return err
+		}
+	}
+	return nil
+}
+
+func(k k8sService) WaitForPodBySelectorUntilRunning(step,name,namespace,processId, selector string, timeout int,existingPods map[string]bool) error {
+	subject := v1.Subject{step, "Listing Pods ...", name, namespace, processId, nil, nil,nil}
+	subject.EventData=make(map[string]interface{})
+	subject.EventData["log"] = subject.Log
+	subject.EventData["footmark"] = enums.POST_AGENT_JOB
+	subject.EventData["status"] = enums.PROCESSING
+	subject.EventData["reason"]="n/a"
+	go k.notifyAll(subject)
+	podList, err := k.ListNewPods(0,namespace, selector,existingPods)
 	if err != nil {
 		return err
 	}
@@ -331,6 +442,9 @@ func(k k8sService)  WaitForPodBySelectorRunning(step,name,namespace,processId, s
 	}
 
 	for _, pod := range podList.Items {
+		subject.Log="Waiting until pods are ready ..."
+		subject.EventData["log"] = subject.Log
+		go k.notifyAll(subject)
 		if err := k.waitForPodRunning( namespace, pod.Name, time.Duration(timeout)*time.Second); err != nil {
 			log.Println(err.Error())
 			return err
