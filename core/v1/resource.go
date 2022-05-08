@@ -15,7 +15,8 @@ type Resource struct {
 	Namespace   string                       `json:"namespace"`
 	Replica     int32                        `json:"replica"`
 	Images      []string                     `json:"images"`
-	Pipeline  *Pipeline            `bson:"pipeline" json :"pipeline"`
+	Pipeline  *Pipeline            `bson:"pipeline" json:"pipeline"`
+	Claim int  `bson:"claim" json:"claim"`
 }
 // Pipeline pipeline stuct
 type Pipeline struct {

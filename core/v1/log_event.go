@@ -9,4 +9,5 @@ type LogEvent struct {
 	Step      string    `bson:"step"`
 	Footmark      string    `bson:"footmark"`
 	CreatedAt time.Time `bson:"created_at"`
+	Claim int  `bson:"claim" json:"claim"`
 }

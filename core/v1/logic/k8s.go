@@ -23,6 +23,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -93,6 +94,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 	subject.EventData["log"]=subject.Log
 	subject.EventData["reason"]="n/a"
 	subject.EventData["status"] = enums.INITIALIZING
+	subject.EventData["claim"]=strconv.Itoa(resource.Claim)
 	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		result, getErr := k.GetDeployment(resource.Name, resource.Namespace)
@@ -143,7 +145,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 			subject.EventData["status"] = enums.PROCESSING
 			go k.notifyAll(subject)
 			var timeout = 30
-			err := k.WaitForPodBySelectorUntilRunning(resource.Step,deploy.Name,deploy.Namespace,resource.ProcessId ,labels.FormatLabels(deploy.Labels), timeout,existingPodName)
+			err := k.WaitForPodBySelectorUntilRunning(resource.Step,deploy.Name,deploy.Namespace,resource.ProcessId ,labels.FormatLabels(deploy.Labels), timeout,existingPodName,resource.Claim)
 			if err != nil {
 				return err
 			}
@@ -222,6 +224,7 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 	subject.EventData["log"]=subject.Log
 	subject.EventData["reason"]="n/a"
 	subject.EventData["status"] = enums.INITIALIZING
+	subject.EventData["claim"]=strconv.Itoa(resource.Claim)
 	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		result, getErr := k.GetStatefulSet(resource.Name, resource.Namespace)
@@ -266,7 +269,7 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 			subject.EventData["status"] = enums.PROCESSING
 			go k.notifyAll(subject)
 			var timeout = 30
-			err := k.WaitForPodBySelectorAndRevisionUntilRunning(resource.Step,statefulSet.Name,statefulSet.Namespace,resource.ProcessId ,labels.FormatLabels(statefulSet.Labels), timeout,existingPodRevisions)
+			err := k.WaitForPodBySelectorAndRevisionUntilRunning(resource.Step,statefulSet.Name,statefulSet.Namespace,resource.ProcessId ,labels.FormatLabels(statefulSet.Labels), timeout,existingPodRevisions,resource.Claim)
 			if err != nil {
 				return err
 			}
@@ -398,13 +401,14 @@ func (k k8sService) ListNewPods(retryCount int,namespace, selector string,  exis
 	return podList, nil
 }
 
-func(k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(step,name,namespace,processId, selector string, timeout int,revisions map[string]bool) error {
+func(k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(step,name,namespace,processId, selector string, timeout int,revisions map[string]bool,claim int) error {
 	subject := v1.Subject{step, "Listing Pods ...", name, namespace, processId, nil, nil,nil}
 	subject.EventData=make(map[string]interface{})
 	subject.EventData["log"] = subject.Log
 	subject.EventData["footmark"] = enums.POST_AGENT_JOB
 	subject.EventData["status"] = enums.PROCESSING
 	subject.EventData["reason"]="n/a"
+	subject.EventData["claim"]=strconv.Itoa(claim)
 	go k.notifyAll(subject)
 	podList, err := k.ListNewPodsByRevision(0,namespace, selector,revisions)
 	if err != nil {
@@ -425,13 +429,14 @@ func(k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(step,name,namespa
 	return nil
 }
 
-func(k k8sService) WaitForPodBySelectorUntilRunning(step,name,namespace,processId, selector string, timeout int,existingPods map[string]bool) error {
+func(k k8sService) WaitForPodBySelectorUntilRunning(step,name,namespace,processId, selector string, timeout int,existingPods map[string]bool,claim int) error {
 	subject := v1.Subject{step, "Listing Pods ...", name, namespace, processId, nil, nil,nil}
 	subject.EventData=make(map[string]interface{})
 	subject.EventData["log"] = subject.Log
 	subject.EventData["footmark"] = enums.POST_AGENT_JOB
 	subject.EventData["status"] = enums.PROCESSING
 	subject.EventData["reason"]="n/a"
+	subject.EventData["claim"]=strconv.Itoa(claim)
 	go k.notifyAll(subject)
 	podList, err := k.ListNewPods(0,namespace, selector,existingPods)
 	if err != nil {

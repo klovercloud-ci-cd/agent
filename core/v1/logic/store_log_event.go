@@ -7,6 +7,7 @@ import (
 	v1 "github.com/klovercloud-ci-cd/agent/core/v1"
 	"github.com/klovercloud-ci-cd/agent/core/v1/service"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -15,12 +16,14 @@ type eventStoreEventService struct {
 }
 
 func (e eventStoreEventService) Listen(subject v1.Subject) {
+	claim,_:=strconv.Atoi(fmt.Sprint(subject.EventData["claim"]))
 	data := v1.LogEvent{
 		ProcessId: subject.ProcessId,
 		Log:       subject.Log,
 		Step:      subject.Step,
 		Footmark:  fmt.Sprint(subject.EventData["footmark"]),
 		CreatedAt: time.Time{}.UTC(),
+		Claim: claim,
 	}
 	header := make(map[string]string)
 	header["Content-Type"] = "application/json"
