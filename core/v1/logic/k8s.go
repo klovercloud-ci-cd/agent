@@ -46,7 +46,6 @@ func (k k8sService) Deploy(data *unstructured.Unstructured) (bool, error) {
 	for {
 		version := data.GetAPIVersion()
 		kind := data.GetKind()
-
 		gv, err := schema.ParseGroupVersion(version)
 		if err != nil {
 			gv = schema.GroupVersion{Version: version}

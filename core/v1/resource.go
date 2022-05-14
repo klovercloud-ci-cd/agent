@@ -20,6 +20,7 @@ type Resource struct {
 }
 // Pipeline pipeline stuct
 type Pipeline struct {
+	MetaData   PipelineMetadata    `json:"_metadata" yaml:"_metadata"`
 	ApiVersion string              `json:"api_version" yaml:"api_version"`
 	Name       string              `json:"name"  yaml:"name"`
 	ProcessId  string              `json:"process_id" yaml:"process_id"`
@@ -30,4 +31,9 @@ type Pipeline struct {
 type Step struct {
 	Name    string                  `json:"name" yaml:"name"`
 	Next    []string                `json:"next" yaml:"next"`
+}
+
+// PipelineMetadata pipeline metadata
+type PipelineMetadata struct {
+	CompanyId       string          `json:"company_id" yaml:"company_id"`
 }
