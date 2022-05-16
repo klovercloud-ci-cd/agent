@@ -133,6 +133,11 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 			existingPodName[each.Name]=true
 		}
 		prev, _ := k.GetDeployment(resource.Name, resource.Namespace)
+		if result.Labels==nil{
+			result.Labels=make(map[string]string)
+		}
+		result.Labels["company"]=resource.Pipeline.MetaData.CompanyId
+		result.Labels["klovercloud_ci"]="enabled"
 		deploy,updateErr:=k.PatchDeploymentObject(prev,result)
 		if updateErr!=nil {
 			log.Println("patchError:",err.Error())
@@ -247,6 +252,11 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 				result.Spec.Template.Spec.Containers[i].Image = each
 			}
 		}
+		if result.Labels==nil{
+			result.Labels=make(map[string]string)
+		}
+		result.Labels["company"]=resource.Pipeline.MetaData.CompanyId
+		result.Labels["klovercloud_ci"]="enabled"
 		listOptions := metav1.ListOptions{LabelSelector: labels.FormatLabels(result.Labels)}
 		podList, err := k.kcs.CoreV1().Pods(resource.Namespace).List(context.TODO(),listOptions)
 		if err!=nil{
@@ -297,6 +307,11 @@ func (k k8sService) UpdateDaemonSet(resource v1.Resource) error {
 		for i, each := range resource.Images {
 			result.Spec.Template.Spec.Containers[i].Image = each
 		}
+		if result.Labels==nil{
+			result.Labels=make(map[string]string)
+		}
+		result.Labels["company"]=resource.Pipeline.MetaData.CompanyId
+		result.Labels["klovercloud_ci"]="enabled"
 		_, updateErr := k.kcs.AppsV1().DaemonSets(resource.Namespace).Update(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
 	})
