@@ -25,7 +25,7 @@ func (h httpClientService) Post(url string, header map[string]string, body []byt
 		req.Header.Set(k, v)
 	}
 	client := &http.Client{}
-	startTraceSpan(req,url,"POST")
+	startTraceSpan(req, url, "POST")
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -54,7 +54,7 @@ func (h httpClientService) Get(url string, header map[string]string) ([]byte, er
 	for k, v := range header {
 		req.Header.Set(k, v)
 	}
-	startTraceSpan(req,url,"GET")
+	startTraceSpan(req, url, "GET")
 	res, err := client.Do(req)
 	if err != nil {
 		log.Println(err.Error())
@@ -73,7 +73,7 @@ func (h httpClientService) Get(url string, header map[string]string) ([]byte, er
 }
 
 // startTraceSpan starts a span
-func startTraceSpan(req *http.Request,url, httpMethod string){
+func startTraceSpan(req *http.Request, url, httpMethod string) {
 	if config.EnableOpenTracing {
 		span, _ := opentracer.StartSpanFromContext(context.Background(), "client")
 		ext.SpanKindRPCClient.Set(span)
@@ -85,7 +85,6 @@ func startTraceSpan(req *http.Request,url, httpMethod string){
 		}
 	}
 }
-
 
 // NewHttpClientService returns HttpClient type service
 func NewHttpClientService() service.HttpClient {

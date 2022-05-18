@@ -60,6 +60,7 @@ const (
 
 // FOOTMARK process footmark (step breakdown)
 type FOOTMARK string
+
 const (
 	// INIT_AGNET_JOB FOOTMARK name
 	INIT_AGNET_JOB = FOOTMARK("init_agent_job")
@@ -67,4 +68,16 @@ const (
 	POST_AGENT_JOB = FOOTMARK("post_agent_job")
 	// UPDATE_RESOURCE FOOTMARK name
 	UPDATE_RESOURCE = FOOTMARK("update_resource")
+)
+
+// Command kafka command
+type Command string
+
+const (
+	// Kube object ADD command
+	ADD = Command("ADD")
+	// Kube object UPDATE command
+	UPDATE = Command("UPDATE")
+	// Kube object DELETE command
+	DELETE = Command("DELETE")
 )

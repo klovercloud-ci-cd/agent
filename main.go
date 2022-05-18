@@ -27,6 +27,8 @@ func main() {
 	api.Routes(e)
 	resourceService := dependency.GetV1ResourceService()
 	go ContinuePullingAgentEvent(resourceService)
+	kubeEventService := dependency.GetV1KubeEventService()
+	go kubeEventService.GetK8sObjectChangeEvents()
 	e.Logger.Fatal(e.Start(":" + config.ServerPort))
 }
 

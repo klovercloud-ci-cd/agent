@@ -16,14 +16,14 @@ type eventStoreEventService struct {
 }
 
 func (e eventStoreEventService) Listen(subject v1.Subject) {
-	claim,_:=strconv.Atoi(fmt.Sprint(subject.EventData["claim"]))
+	claim, _ := strconv.Atoi(fmt.Sprint(subject.EventData["claim"]))
 	data := v1.LogEvent{
 		ProcessId: subject.ProcessId,
 		Log:       subject.Log,
 		Step:      subject.Step,
 		Footmark:  fmt.Sprint(subject.EventData["footmark"]),
 		CreatedAt: time.Time{}.UTC(),
-		Claim: claim,
+		Claim:     claim,
 	}
 	header := make(map[string]string)
 	header["Content-Type"] = "application/json"
