@@ -16,7 +16,7 @@ func GetV1ResourceService() service.Resource {
 	observers = append(observers, eventStoreProcessEventService)
 	observers = append(observers, eventStoreProcessLifeCycleEvent)
 	k8sClientSet, dynamicClient, discoveryClient := config.GetClientSet()
-	kafkaPublisher := logic.NewKafkaPublisher()
+	kafkaPublisher := logic.NewKubeEventKafkaPublisher()
 	return logic.NewResourceService(logic.NewK8sService(k8sClientSet, dynamicClient, discoveryClient, observers, kafkaPublisher), observers, logic.NewHttpClientService())
 }
 
@@ -34,6 +34,6 @@ func GetV1KubeEventService() service.KubeEvent {
 	observers = append(observers, eventStoreProcessEventService)
 	observers = append(observers, eventStoreProcessLifeCycleEvent)
 	k8sClientSet, dynamicClient, discoveryClient := config.GetClientSet()
-	kafkaPublisher := logic.NewKafkaPublisher()
+	kafkaPublisher := logic.NewKubeEventKafkaPublisher()
 	return logic.NewKubeEventService(logic.NewK8sService(k8sClientSet, dynamicClient, discoveryClient, observers, kafkaPublisher))
 }

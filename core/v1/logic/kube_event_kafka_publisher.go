@@ -12,6 +12,6 @@ func (k kubeEventKafkaPublisher) Publish(message v1.KubeEventMessage) {
 	panic("implement me")
 }
 
-func NewKafkaPublisher() service.KubeEventPublisher {
+func NewKubeEventKafkaPublisher() service.KubeEventPublisher {
 	return kubeEventKafkaPublisher{}
 }
