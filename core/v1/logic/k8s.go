@@ -37,7 +37,7 @@ type k8sService struct {
 	dynamicClient   dynamic.Interface
 	discoveryClient *discovery.DiscoveryClient
 	observerList    []service.Observer
-	kafkaPublisher  service.KafkaPublisher
+	kafkaPublisher  service.KubeEventPublisher
 }
 
 func (k k8sService) ListenNamespaceEvents() (cache.Store, cache.Controller) {
@@ -918,7 +918,7 @@ func (k k8sService) notifyAll(subject v1.Subject) {
 }
 
 // NewK8sService returns K8s type service.
-func NewK8sService(Kcs *kubernetes.Clientset, dynamicClient dynamic.Interface, discoveryClient *discovery.DiscoveryClient, observerList []service.Observer, kafkaPublisher service.KafkaPublisher) service.K8s {
+func NewK8sService(Kcs *kubernetes.Clientset, dynamicClient dynamic.Interface, discoveryClient *discovery.DiscoveryClient, observerList []service.Observer, kafkaPublisher service.KubeEventPublisher) service.K8s {
 	return &k8sService{
 		kcs:             Kcs,
 		dynamicClient:   dynamicClient,
