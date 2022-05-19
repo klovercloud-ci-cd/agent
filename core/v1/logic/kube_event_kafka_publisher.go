@@ -5,13 +5,13 @@ import (
 	"github.com/klovercloud-ci-cd/agent/core/v1/service"
 )
 
-type kubeEventPublisher struct {
+type kubeEventKafkaPublisher struct {
 }
 
-func (k kubeEventPublisher) Publish(message v1.KubeEventMessage) {
+func (k kubeEventKafkaPublisher) Publish(message v1.KubeEventMessage) {
 	panic("implement me")
 }
 
 func NewKafkaPublisher() service.KubeEventPublisher {
-	return kubeEventPublisher{}
+	return kubeEventKafkaPublisher{}
 }
