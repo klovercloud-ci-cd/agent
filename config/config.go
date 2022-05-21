@@ -38,6 +38,9 @@ var Token string
 // EnableOpenTracing set true if opentracing is needed.
 var EnableOpenTracing bool
 
+// KafkaPublisherEnabled set true if kafka publisher is enabled
+var KafkaPublisherEnabled bool
+
 // InitEnvironmentVariables initializes environment variables
 func InitEnvironmentVariables() {
 	RunMode = os.Getenv("RUN_MODE")
@@ -82,5 +85,11 @@ func InitEnvironmentVariables() {
 		} else {
 			EnableOpenTracing = false
 		}
+	}
+
+	if os.Getenv("KAFKA_PUBLISHER_ENABLED") == "true" {
+		KafkaPublisherEnabled = true
+	} else {
+		KafkaPublisherEnabled = false
 	}
 }

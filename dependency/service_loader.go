@@ -16,8 +16,13 @@ func GetV1ResourceService() service.Resource {
 	observers = append(observers, eventStoreProcessEventService)
 	observers = append(observers, eventStoreProcessLifeCycleEvent)
 	k8sClientSet, dynamicClient, discoveryClient := config.GetClientSet()
-	kafkaPublisher := logic.NewKubeEventKafkaPublisher()
-	return logic.NewResourceService(logic.NewK8sService(k8sClientSet, dynamicClient, discoveryClient, observers, kafkaPublisher), observers, logic.NewHttpClientService())
+	var kubeEventPublisher service.KubeEventPublisher
+	if config.KafkaPublisherEnabled {
+		kubeEventPublisher = logic.NewKubeEventKafkaPublisher()
+	} else {
+		kubeEventPublisher = logic.NewKubeEventHttpPublisher(logic.NewHttpClientService())
+	}
+	return logic.NewResourceService(logic.NewK8sService(k8sClientSet, dynamicClient, discoveryClient, observers, kubeEventPublisher), observers, logic.NewHttpClientService())
 }
 
 // GetV1JwtService returns Jwt services
@@ -34,6 +39,11 @@ func GetV1KubeEventService() service.KubeEvent {
 	observers = append(observers, eventStoreProcessEventService)
 	observers = append(observers, eventStoreProcessLifeCycleEvent)
 	k8sClientSet, dynamicClient, discoveryClient := config.GetClientSet()
-	kafkaPublisher := logic.NewKubeEventKafkaPublisher()
-	return logic.NewKubeEventService(logic.NewK8sService(k8sClientSet, dynamicClient, discoveryClient, observers, kafkaPublisher))
+	var kubeEventPublisher service.KubeEventPublisher
+	if config.KafkaPublisherEnabled {
+		kubeEventPublisher = logic.NewKubeEventKafkaPublisher()
+	} else {
+		kubeEventPublisher = logic.NewKubeEventHttpPublisher(logic.NewHttpClientService())
+	}
+	return logic.NewKubeEventService(logic.NewK8sService(k8sClientSet, dynamicClient, discoveryClient, observers, kubeEventPublisher))
 }
