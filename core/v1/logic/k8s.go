@@ -41,6 +41,11 @@ type k8sService struct {
 	kubeEventPublisher service.KubeEventPublisher
 }
 
+type KubeObject struct {
+	oldK8sObj interface{} `json:"old_k8s_obj" bson:"old_k8s_obj"`
+	newK8sObj interface{} `json:"new_k8s_obj" bson:"new_k8s_obj"`
+}
+
 func (k k8sService) ListenNamespaceEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.CoreV1().RESTClient(), "namespaces", "",
 		fields.Everything())
@@ -81,10 +86,6 @@ func (k k8sService) ListenNamespaceEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*coreV1.Namespace)
 				newK8sObj := newObj.(*coreV1.Namespace)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -144,10 +145,6 @@ func (k k8sService) ListenServiceEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*coreV1.Service)
 				newK8sObj := newObj.(*coreV1.Service)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -208,10 +205,6 @@ func (k k8sService) ListenPodEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*coreV1.Pod)
 				newK8sObj := newObj.(*coreV1.Pod)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -271,10 +264,6 @@ func (k k8sService) ListenDeployEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*appsV1.Deployment)
 				newK8sObj := newObj.(*appsV1.Deployment)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -334,10 +323,6 @@ func (k k8sService) ListenIngressEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*v1beta1.Ingress)
 				newK8sObj := newObj.(*v1beta1.Ingress)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -397,10 +382,6 @@ func (k k8sService) ListenNetworkPolicyEvents() (cache.Store, cache.Controller) 
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*networkingV1.NetworkPolicy)
 				newK8sObj := newObj.(*networkingV1.NetworkPolicy)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -460,10 +441,6 @@ func (k k8sService) ListenClusterRoleBindingEvents() (cache.Store, cache.Control
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*rbacV1.ClusterRoleBinding)
 				newK8sObj := newObj.(*rbacV1.ClusterRoleBinding)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -523,10 +500,6 @@ func (k k8sService) ListenClusterRoleEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*rbacV1.ClusterRole)
 				newK8sObj := newObj.(*rbacV1.ClusterRole)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -586,10 +559,6 @@ func (k k8sService) ListenRoleBindingEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*rbacV1.RoleBinding)
 				newK8sObj := newObj.(*rbacV1.RoleBinding)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -649,10 +618,6 @@ func (k k8sService) ListenRoleEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*rbacV1.Role)
 				newK8sObj := newObj.(*rbacV1.Role)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -712,10 +677,6 @@ func (k k8sService) ListenServiceAccountEvents() (cache.Store, cache.Controller)
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*coreV1.ServiceAccount)
 				newK8sObj := newObj.(*coreV1.ServiceAccount)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -775,10 +736,6 @@ func (k k8sService) ListenSecretEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*coreV1.Secret)
 				newK8sObj := newObj.(*coreV1.Secret)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -838,10 +795,6 @@ func (k k8sService) ListenConfigMapEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*coreV1.ConfigMap)
 				newK8sObj := newObj.(*coreV1.ConfigMap)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -901,10 +854,6 @@ func (k k8sService) ListenPVCEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*coreV1.PersistentVolumeClaim)
 				newK8sObj := newObj.(*coreV1.PersistentVolumeClaim)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -964,10 +913,6 @@ func (k k8sService) ListenPVEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*coreV1.PersistentVolume)
 				newK8sObj := newObj.(*coreV1.PersistentVolume)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -1027,10 +972,6 @@ func (k k8sService) ListenDaemonSetEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*appsV1.DaemonSet)
 				newK8sObj := newObj.(*appsV1.DaemonSet)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -1090,10 +1031,6 @@ func (k k8sService) ListenReplicaSetEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*appsV1.ReplicaSet)
 				newK8sObj := newObj.(*appsV1.ReplicaSet)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
@@ -1153,10 +1090,6 @@ func (k k8sService) ListenStateFullSetSetEvents() (cache.Store, cache.Controller
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*appsV1.StatefulSet)
 				newK8sObj := newObj.(*appsV1.StatefulSet)
-
-				type KubeObject struct {
-					oldK8sObj, newK8sObj interface{}
-				}
 				obj := KubeObject{
 					oldK8sObj: oldK8sObj,
 					newK8sObj: newK8sObj,
