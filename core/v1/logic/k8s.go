@@ -42,8 +42,8 @@ type k8sService struct {
 }
 
 type KubeObject struct {
-	oldK8sObj interface{} `json:"old_k8s_obj" bson:"old_k8s_obj"`
-	newK8sObj interface{} `json:"new_k8s_obj" bson:"new_k8s_obj"`
+	OldK8sObj interface{} `json:"old_k8s_obj" bson:"old_k8s_obj"`
+	NewK8sObj interface{} `json:"new_k8s_obj" bson:"new_k8s_obj"`
 }
 
 func (k k8sService) ListenNamespaceEvents() (cache.Store, cache.Controller) {
@@ -87,8 +87,8 @@ func (k k8sService) ListenNamespaceEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*coreV1.Namespace)
 				newK8sObj := newObj.(*coreV1.Namespace)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -146,8 +146,8 @@ func (k k8sService) ListenServiceEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*coreV1.Service)
 				newK8sObj := newObj.(*coreV1.Service)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -206,8 +206,8 @@ func (k k8sService) ListenPodEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*coreV1.Pod)
 				newK8sObj := newObj.(*coreV1.Pod)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -265,8 +265,8 @@ func (k k8sService) ListenDeployEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*appsV1.Deployment)
 				newK8sObj := newObj.(*appsV1.Deployment)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -324,8 +324,8 @@ func (k k8sService) ListenIngressEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*v1beta1.Ingress)
 				newK8sObj := newObj.(*v1beta1.Ingress)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -383,8 +383,8 @@ func (k k8sService) ListenNetworkPolicyEvents() (cache.Store, cache.Controller) 
 				oldK8sObj := oldObj.(*networkingV1.NetworkPolicy)
 				newK8sObj := newObj.(*networkingV1.NetworkPolicy)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -442,8 +442,8 @@ func (k k8sService) ListenClusterRoleBindingEvents() (cache.Store, cache.Control
 				oldK8sObj := oldObj.(*rbacV1.ClusterRoleBinding)
 				newK8sObj := newObj.(*rbacV1.ClusterRoleBinding)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -501,8 +501,8 @@ func (k k8sService) ListenClusterRoleEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*rbacV1.ClusterRole)
 				newK8sObj := newObj.(*rbacV1.ClusterRole)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -560,8 +560,8 @@ func (k k8sService) ListenRoleBindingEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*rbacV1.RoleBinding)
 				newK8sObj := newObj.(*rbacV1.RoleBinding)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -619,8 +619,8 @@ func (k k8sService) ListenRoleEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*rbacV1.Role)
 				newK8sObj := newObj.(*rbacV1.Role)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -678,8 +678,8 @@ func (k k8sService) ListenServiceAccountEvents() (cache.Store, cache.Controller)
 				oldK8sObj := oldObj.(*coreV1.ServiceAccount)
 				newK8sObj := newObj.(*coreV1.ServiceAccount)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -737,8 +737,8 @@ func (k k8sService) ListenSecretEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*coreV1.Secret)
 				newK8sObj := newObj.(*coreV1.Secret)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -796,8 +796,8 @@ func (k k8sService) ListenConfigMapEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*coreV1.ConfigMap)
 				newK8sObj := newObj.(*coreV1.ConfigMap)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -855,8 +855,8 @@ func (k k8sService) ListenPVCEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*coreV1.PersistentVolumeClaim)
 				newK8sObj := newObj.(*coreV1.PersistentVolumeClaim)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -914,8 +914,8 @@ func (k k8sService) ListenPVEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*coreV1.PersistentVolume)
 				newK8sObj := newObj.(*coreV1.PersistentVolume)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -973,8 +973,8 @@ func (k k8sService) ListenDaemonSetEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*appsV1.DaemonSet)
 				newK8sObj := newObj.(*appsV1.DaemonSet)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -1032,8 +1032,8 @@ func (k k8sService) ListenReplicaSetEvents() (cache.Store, cache.Controller) {
 				oldK8sObj := oldObj.(*appsV1.ReplicaSet)
 				newK8sObj := newObj.(*appsV1.ReplicaSet)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
@@ -1091,8 +1091,8 @@ func (k k8sService) ListenStateFullSetSetEvents() (cache.Store, cache.Controller
 				oldK8sObj := oldObj.(*appsV1.StatefulSet)
 				newK8sObj := newObj.(*appsV1.StatefulSet)
 				obj := KubeObject{
-					oldK8sObj: oldK8sObj,
-					newK8sObj: newK8sObj,
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
