@@ -34,9 +34,9 @@ import (
 )
 
 type k8sService struct {
-	kcs             *kubernetes.Clientset
-	dynamicClient   dynamic.Interface
-	discoveryClient *discovery.DiscoveryClient
+	kcs                *kubernetes.Clientset
+	dynamicClient      dynamic.Interface
+	discoveryClient    *discovery.DiscoveryClient
 	observerList       []service.Observer
 	kubeEventPublisher service.KubeEventPublisher
 }
@@ -44,7 +44,7 @@ type k8sService struct {
 func (k k8sService) ListenNamespaceEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.CoreV1().RESTClient(), "namespaces", "",
 		fields.Everything())
-	extrasMap := map[string]string{"type":"namespace", "agent": config.AgentName}
+	extrasMap := map[string]string{"type": "namespace", "agent": config.AgentName, "object": string(enums.NAMESPACE)}
 	return cache.NewInformer(
 		watchlist,
 		&coreV1.Namespace{},
@@ -54,11 +54,11 @@ func (k k8sService) ListenNamespaceEvents() (cache.Store, cache.Controller) {
 				ns := obj.(*coreV1.Namespace)
 				if _, ok := ns.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   ns,
+						Body: ns,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add Namespace: ", ns.Name)
@@ -68,11 +68,11 @@ func (k k8sService) ListenNamespaceEvents() (cache.Store, cache.Controller) {
 				ns := obj.(*coreV1.Namespace)
 				if _, ok := ns.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   ns,
+						Body: ns,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete Namespace:", ns.Name)
@@ -91,11 +91,11 @@ func (k k8sService) ListenNamespaceEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old Namespace:", oldK8sObj.Name, ", new Namespace:", newK8sObj.Name)
@@ -107,7 +107,7 @@ func (k k8sService) ListenNamespaceEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenServiceEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.CoreV1().RESTClient(), "services", "", fields.Everything())
-	extrasMap := map[string]string{"type":"service", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "service", "agent": config.AgentName, "object": string(enums.SERVICE)}
 	return cache.NewInformer(
 		watchlist,
 		&coreV1.Service{},
@@ -117,11 +117,11 @@ func (k k8sService) ListenServiceEvents() (cache.Store, cache.Controller) {
 				svc := obj.(*coreV1.Service)
 				if _, ok := svc.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   svc,
+						Body: svc,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add Service: ", svc.Name)
@@ -131,11 +131,11 @@ func (k k8sService) ListenServiceEvents() (cache.Store, cache.Controller) {
 				svc := obj.(*coreV1.Service)
 				if _, ok := svc.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   svc,
+						Body: svc,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete Service:", svc.Name)
@@ -154,11 +154,11 @@ func (k k8sService) ListenServiceEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old Service:", oldK8sObj.Name, ", new Service:", newK8sObj.Name)
@@ -171,7 +171,7 @@ func (k k8sService) ListenServiceEvents() (cache.Store, cache.Controller) {
 func (k k8sService) ListenPodEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.CoreV1().RESTClient(), "pods", "",
 		fields.Everything())
-	extrasMap := map[string]string{"type":"pod", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "pod", "agent": config.AgentName, "object": string(enums.POD)}
 	return cache.NewInformer(
 		watchlist,
 		&coreV1.Pod{},
@@ -181,11 +181,11 @@ func (k k8sService) ListenPodEvents() (cache.Store, cache.Controller) {
 				pod := obj.(*coreV1.Pod)
 				if _, ok := pod.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   pod,
+						Body: pod,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add Pod: ", pod.Name)
@@ -195,11 +195,11 @@ func (k k8sService) ListenPodEvents() (cache.Store, cache.Controller) {
 				pod := obj.(*coreV1.Pod)
 				if _, ok := pod.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   pod,
+						Body: pod,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete Pod:", pod.Name)
@@ -218,11 +218,11 @@ func (k k8sService) ListenPodEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old Pod:", oldK8sObj.Name, ", new Pod:", newK8sObj.Name)
@@ -234,7 +234,7 @@ func (k k8sService) ListenPodEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenDeployEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.AppsV1().RESTClient(), "deployments", "", fields.Everything())
-	extrasMap := map[string]string{"type":"deployment", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "deployment", "agent": config.AgentName, "object": string(enums.DEPLOYMENT)}
 	return cache.NewInformer(
 		watchlist,
 		&appsV1.Deployment{},
@@ -244,11 +244,11 @@ func (k k8sService) ListenDeployEvents() (cache.Store, cache.Controller) {
 				deployment := obj.(*appsV1.Deployment)
 				if _, ok := deployment.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   deployment,
+						Body: deployment,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add Deploy: ", deployment.Name)
@@ -258,11 +258,11 @@ func (k k8sService) ListenDeployEvents() (cache.Store, cache.Controller) {
 				deployment := obj.(*appsV1.Deployment)
 				if _, ok := deployment.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   deployment,
+						Body: deployment,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete Deploy: ", deployment.Name)
@@ -281,11 +281,11 @@ func (k k8sService) ListenDeployEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old Deploy:", oldK8sObj.Name, ", new Deploy:", newK8sObj.Name)
@@ -297,7 +297,7 @@ func (k k8sService) ListenDeployEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenIngressEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.ExtensionsV1beta1().RESTClient(), "ingresses", "", fields.Everything())
-	extrasMap := map[string]string{"type":"ingress", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "ingress", "agent": config.AgentName, "object": string(enums.INGRESS)}
 	return cache.NewInformer(
 		watchlist,
 		&v1beta1.Ingress{},
@@ -307,11 +307,11 @@ func (k k8sService) ListenIngressEvents() (cache.Store, cache.Controller) {
 				ingress := obj.(*v1beta1.Ingress)
 				if _, ok := ingress.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   ingress,
+						Body: ingress,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add Ingress: ", ingress.Name)
@@ -321,11 +321,11 @@ func (k k8sService) ListenIngressEvents() (cache.Store, cache.Controller) {
 				ingress := obj.(*v1beta1.Ingress)
 				if _, ok := ingress.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   ingress,
+						Body: ingress,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete Ingress: ", ingress.Name)
@@ -344,11 +344,11 @@ func (k k8sService) ListenIngressEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old Ingress:", oldK8sObj.Name, ", new Ingress:", newK8sObj.Name)
@@ -360,7 +360,7 @@ func (k k8sService) ListenIngressEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenNetworkPolicyEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.NetworkingV1().RESTClient(), "networkpolicies", "", fields.Everything())
-	extrasMap := map[string]string{"type":"networkPolicy", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "networkPolicy", "agent": config.AgentName, "object": string(enums.NETWORK_POLICY)}
 	return cache.NewInformer(
 		watchlist,
 		&networkingV1.NetworkPolicy{},
@@ -370,11 +370,11 @@ func (k k8sService) ListenNetworkPolicyEvents() (cache.Store, cache.Controller) 
 				networkPolicy := obj.(*networkingV1.NetworkPolicy)
 				if _, ok := networkPolicy.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   networkPolicy,
+						Body: networkPolicy,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add NetworkPolicy: ", networkPolicy.Name)
@@ -384,11 +384,11 @@ func (k k8sService) ListenNetworkPolicyEvents() (cache.Store, cache.Controller) 
 				networkPolicy := obj.(*networkingV1.NetworkPolicy)
 				if _, ok := networkPolicy.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   networkPolicy,
+						Body: networkPolicy,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete NetworkPolicy: ", networkPolicy.Name)
@@ -407,11 +407,11 @@ func (k k8sService) ListenNetworkPolicyEvents() (cache.Store, cache.Controller) 
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old NetworkPolicy:", oldK8sObj.Name, ", new NetworkPolicy:", newK8sObj.Name)
@@ -423,7 +423,7 @@ func (k k8sService) ListenNetworkPolicyEvents() (cache.Store, cache.Controller) 
 
 func (k k8sService) ListenClusterRoleBindingEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.RbacV1().RESTClient(), "clusterrolebindings", "", fields.Everything())
-	extrasMap := map[string]string{"type":"clusterRoleBinding", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "clusterRoleBinding", "agent": config.AgentName, "object": string(enums.CLUSTER_ROLE_BINDGING)}
 	return cache.NewInformer(
 		watchlist,
 		&rbacV1.ClusterRoleBinding{},
@@ -433,11 +433,11 @@ func (k k8sService) ListenClusterRoleBindingEvents() (cache.Store, cache.Control
 				clusterRoleBinding := obj.(*rbacV1.ClusterRoleBinding)
 				if _, ok := clusterRoleBinding.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   clusterRoleBinding,
+						Body: clusterRoleBinding,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add ClusterRoleBinding: ", clusterRoleBinding.Name)
@@ -447,11 +447,11 @@ func (k k8sService) ListenClusterRoleBindingEvents() (cache.Store, cache.Control
 				clusterRoleBinding := obj.(*rbacV1.ClusterRoleBinding)
 				if _, ok := clusterRoleBinding.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   clusterRoleBinding,
+						Body: clusterRoleBinding,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete ClusterRoleBinding: ", clusterRoleBinding.Name)
@@ -470,11 +470,11 @@ func (k k8sService) ListenClusterRoleBindingEvents() (cache.Store, cache.Control
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old ClusterRoleBinding:", oldK8sObj.Name, ", new ClusterRoleBinding:", newK8sObj.Name)
@@ -486,7 +486,7 @@ func (k k8sService) ListenClusterRoleBindingEvents() (cache.Store, cache.Control
 
 func (k k8sService) ListenClusterRoleEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.RbacV1().RESTClient(), "clusterroles", "", fields.Everything())
-	extrasMap := map[string]string{"type":"clusterRole", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "clusterRole", "agent": config.AgentName, "object": string(enums.CLUSTER_ROLE)}
 	return cache.NewInformer(
 		watchlist,
 		&rbacV1.ClusterRole{},
@@ -496,11 +496,11 @@ func (k k8sService) ListenClusterRoleEvents() (cache.Store, cache.Controller) {
 				clusterRole := obj.(*rbacV1.ClusterRole)
 				if _, ok := clusterRole.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   clusterRole,
+						Body: clusterRole,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add ClusterRole: ", clusterRole.Name)
@@ -510,11 +510,11 @@ func (k k8sService) ListenClusterRoleEvents() (cache.Store, cache.Controller) {
 				clusterRole := obj.(*rbacV1.ClusterRole)
 				if _, ok := clusterRole.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   clusterRole,
+						Body: clusterRole,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete ClusterRole: ", clusterRole.Name)
@@ -533,11 +533,11 @@ func (k k8sService) ListenClusterRoleEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old ClusterRole:", oldK8sObj.Name, ", new ClusterRole:", newK8sObj.Name)
@@ -549,7 +549,7 @@ func (k k8sService) ListenClusterRoleEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenRoleBindingEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.RbacV1().RESTClient(), "rolebindings", "", fields.Everything())
-	extrasMap := map[string]string{"type":"roleBinding", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "roleBinding", "agent": config.AgentName, "object": string(enums.ROLE_BINDING)}
 	return cache.NewInformer(
 		watchlist,
 		&rbacV1.RoleBinding{},
@@ -559,11 +559,11 @@ func (k k8sService) ListenRoleBindingEvents() (cache.Store, cache.Controller) {
 				roleBinding := obj.(*rbacV1.RoleBinding)
 				if _, ok := roleBinding.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   roleBinding,
+						Body: roleBinding,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add RoleBinding: ", roleBinding.Name)
@@ -573,11 +573,11 @@ func (k k8sService) ListenRoleBindingEvents() (cache.Store, cache.Controller) {
 				roleBinding := obj.(*rbacV1.RoleBinding)
 				if _, ok := roleBinding.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   roleBinding,
+						Body: roleBinding,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete RoleBinding: ", roleBinding.Name)
@@ -596,11 +596,11 @@ func (k k8sService) ListenRoleBindingEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old RoleBinding:", oldK8sObj.Name, ", new RoleBinding:", newK8sObj.Name)
@@ -612,7 +612,7 @@ func (k k8sService) ListenRoleBindingEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenRoleEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.RbacV1().RESTClient(), "roles", "", fields.Everything())
-	extrasMap := map[string]string{"type":"role", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "role", "agent": config.AgentName, "object": string(enums.ROLE)}
 	return cache.NewInformer(
 		watchlist,
 		&rbacV1.Role{},
@@ -622,11 +622,11 @@ func (k k8sService) ListenRoleEvents() (cache.Store, cache.Controller) {
 				role := obj.(*rbacV1.Role)
 				if _, ok := role.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   role,
+						Body: role,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add Role: ", role.Name)
@@ -636,11 +636,11 @@ func (k k8sService) ListenRoleEvents() (cache.Store, cache.Controller) {
 				role := obj.(*rbacV1.Role)
 				if _, ok := role.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   role,
+						Body: role,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete Role: ", role.Name)
@@ -659,11 +659,11 @@ func (k k8sService) ListenRoleEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old Role:", oldK8sObj.Name, ", new Role:", newK8sObj.Name)
@@ -675,7 +675,7 @@ func (k k8sService) ListenRoleEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenServiceAccountEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.CoreV1().RESTClient(), "serviceAccounts", "", fields.Everything())
-	extrasMap := map[string]string{"type":"serviceAccount", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "serviceAccount", "agent": config.AgentName, "object": string(enums.SERVICE_ACCOUNT)}
 	return cache.NewInformer(
 		watchlist,
 		&coreV1.ServiceAccount{},
@@ -685,11 +685,11 @@ func (k k8sService) ListenServiceAccountEvents() (cache.Store, cache.Controller)
 				serviceAccount := obj.(*coreV1.ServiceAccount)
 				if _, ok := serviceAccount.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   serviceAccount,
+						Body: serviceAccount,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add ServiceAccount: ", serviceAccount.Name)
@@ -699,11 +699,11 @@ func (k k8sService) ListenServiceAccountEvents() (cache.Store, cache.Controller)
 				serviceAccount := obj.(*coreV1.ServiceAccount)
 				if _, ok := serviceAccount.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   serviceAccount,
+						Body: serviceAccount,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete ServiceAccount: ", serviceAccount.Name)
@@ -722,11 +722,11 @@ func (k k8sService) ListenServiceAccountEvents() (cache.Store, cache.Controller)
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old ServiceAccount:", oldK8sObj.Name, ", new ServiceAccount:", newK8sObj.Name)
@@ -738,7 +738,7 @@ func (k k8sService) ListenServiceAccountEvents() (cache.Store, cache.Controller)
 
 func (k k8sService) ListenSecretEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.CoreV1().RESTClient(), "secrets", "", fields.Everything())
-	extrasMap := map[string]string{"type":"secret", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "secret", "agent": config.AgentName, "object": string(enums.SECRET)}
 	return cache.NewInformer(
 		watchlist,
 		&coreV1.Secret{},
@@ -748,11 +748,11 @@ func (k k8sService) ListenSecretEvents() (cache.Store, cache.Controller) {
 				secret := obj.(*coreV1.Secret)
 				if _, ok := secret.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   secret,
+						Body: secret,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add Secret: ", secret.Name)
@@ -762,11 +762,11 @@ func (k k8sService) ListenSecretEvents() (cache.Store, cache.Controller) {
 				secret := obj.(*coreV1.Secret)
 				if _, ok := secret.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   secret,
+						Body: secret,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete Secret: ", secret.Name)
@@ -785,11 +785,11 @@ func (k k8sService) ListenSecretEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old Secret:", oldK8sObj.Name, ", new Secret:", newK8sObj.Name)
@@ -801,7 +801,7 @@ func (k k8sService) ListenSecretEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenConfigMapEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.CoreV1().RESTClient(), "configMaps", "", fields.Everything())
-	extrasMap := map[string]string{"type":"configMap", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "configMap", "agent": config.AgentName, "object": string(enums.CONFIG_MAP)}
 	return cache.NewInformer(
 		watchlist,
 		&coreV1.ConfigMap{},
@@ -811,11 +811,11 @@ func (k k8sService) ListenConfigMapEvents() (cache.Store, cache.Controller) {
 				configMap := obj.(*coreV1.ConfigMap)
 				if _, ok := configMap.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   configMap,
+						Body: configMap,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add ConfigMap: ", configMap.Name)
@@ -825,11 +825,11 @@ func (k k8sService) ListenConfigMapEvents() (cache.Store, cache.Controller) {
 				configMap := obj.(*coreV1.ConfigMap)
 				if _, ok := configMap.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   configMap,
+						Body: configMap,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete ConfigMap: ", configMap.Name)
@@ -848,11 +848,11 @@ func (k k8sService) ListenConfigMapEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old ConfigMap:", oldK8sObj.Name, ", new ConfigMap:", newK8sObj.Name)
@@ -864,7 +864,7 @@ func (k k8sService) ListenConfigMapEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenPVCEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.CoreV1().RESTClient(), "persistentVolumeClaims", "", fields.Everything())
-	extrasMap := map[string]string{"type":"pvc", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "pvc", "agent": config.AgentName, "object": string(enums.PERSISTENT_VOLUME_CLAIM)}
 	return cache.NewInformer(
 		watchlist,
 		&coreV1.PersistentVolumeClaim{},
@@ -874,11 +874,11 @@ func (k k8sService) ListenPVCEvents() (cache.Store, cache.Controller) {
 				persistentVolumeClaim := obj.(*coreV1.PersistentVolumeClaim)
 				if _, ok := persistentVolumeClaim.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   persistentVolumeClaim,
+						Body: persistentVolumeClaim,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add PVC: ", persistentVolumeClaim.Name)
@@ -888,11 +888,11 @@ func (k k8sService) ListenPVCEvents() (cache.Store, cache.Controller) {
 				persistentVolumeClaim := obj.(*coreV1.PersistentVolumeClaim)
 				if _, ok := persistentVolumeClaim.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   persistentVolumeClaim,
+						Body: persistentVolumeClaim,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete PVC: ", persistentVolumeClaim.Name)
@@ -911,11 +911,11 @@ func (k k8sService) ListenPVCEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old PVC:", oldK8sObj.Name, ", new PVC:", newK8sObj.Name)
@@ -927,7 +927,7 @@ func (k k8sService) ListenPVCEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenPVEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.CoreV1().RESTClient(), "persistentVolumes", "", fields.Everything())
-	extrasMap := map[string]string{"type":"persistentVolume", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "persistentVolume", "agent": config.AgentName, "object": string(enums.PERSISTENT_VOLUME)}
 	return cache.NewInformer(
 		watchlist,
 		&coreV1.PersistentVolume{},
@@ -937,11 +937,11 @@ func (k k8sService) ListenPVEvents() (cache.Store, cache.Controller) {
 				persistentVolume := obj.(*coreV1.PersistentVolume)
 				if _, ok := persistentVolume.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   persistentVolume,
+						Body: persistentVolume,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add PV: ", persistentVolume.Name)
@@ -951,11 +951,11 @@ func (k k8sService) ListenPVEvents() (cache.Store, cache.Controller) {
 				persistentVolume := obj.(*coreV1.PersistentVolume)
 				if _, ok := persistentVolume.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   persistentVolume,
+						Body: persistentVolume,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete PV: ", persistentVolume.Name)
@@ -974,11 +974,11 @@ func (k k8sService) ListenPVEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old PV:", oldK8sObj.Name, ", new PV:", newK8sObj.Name)
@@ -990,7 +990,7 @@ func (k k8sService) ListenPVEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenDaemonSetEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.AppsV1().RESTClient(), "daemonSets", "", fields.Everything())
-	extrasMap := map[string]string{"type":"daemonSet", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "daemonSet", "agent": config.AgentName, "object": string(enums.DAEMONSET)}
 	return cache.NewInformer(
 		watchlist,
 		&appsV1.DaemonSet{},
@@ -1000,11 +1000,11 @@ func (k k8sService) ListenDaemonSetEvents() (cache.Store, cache.Controller) {
 				daemonSet := obj.(*appsV1.DaemonSet)
 				if _, ok := daemonSet.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   daemonSet,
+						Body: daemonSet,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add DaemonSet: ", daemonSet.Name)
@@ -1014,11 +1014,11 @@ func (k k8sService) ListenDaemonSetEvents() (cache.Store, cache.Controller) {
 				daemonSet := obj.(*appsV1.DaemonSet)
 				if _, ok := daemonSet.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   daemonSet,
+						Body: daemonSet,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete DaemonSet: ", daemonSet.Name)
@@ -1037,11 +1037,11 @@ func (k k8sService) ListenDaemonSetEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old DaemonSet:", oldK8sObj.Name, ", new DaemonSet:", newK8sObj.Name)
@@ -1053,7 +1053,7 @@ func (k k8sService) ListenDaemonSetEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenReplicaSetEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.AppsV1().RESTClient(), "replicaSets", "", fields.Everything())
-	extrasMap := map[string]string{"type":"replicaSet", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "replicaSet", "agent": config.AgentName, "object": string(enums.REPLICASET)}
 	return cache.NewInformer(
 		watchlist,
 		&appsV1.ReplicaSet{},
@@ -1063,11 +1063,11 @@ func (k k8sService) ListenReplicaSetEvents() (cache.Store, cache.Controller) {
 				replicaSet := obj.(*appsV1.ReplicaSet)
 				if _, ok := replicaSet.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   replicaSet,
+						Body: replicaSet,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add ReplicaSet: ", replicaSet.Name)
@@ -1077,11 +1077,11 @@ func (k k8sService) ListenReplicaSetEvents() (cache.Store, cache.Controller) {
 				replicaSet := obj.(*appsV1.ReplicaSet)
 				if _, ok := replicaSet.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   replicaSet,
+						Body: replicaSet,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete ReplicaSet: ", replicaSet.Name)
@@ -1100,11 +1100,11 @@ func (k k8sService) ListenReplicaSetEvents() (cache.Store, cache.Controller) {
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old ReplicaSet:", oldK8sObj.Name, ", new ReplicaSet:", newK8sObj.Name)
@@ -1116,7 +1116,7 @@ func (k k8sService) ListenReplicaSetEvents() (cache.Store, cache.Controller) {
 
 func (k k8sService) ListenStateFullSetSetEvents() (cache.Store, cache.Controller) {
 	watchlist := cache.NewListWatchFromClient(k.kcs.AppsV1().RESTClient(), "statefulSets", "", fields.Everything())
-	extrasMap := map[string]string{"type":"statefulSet", "agent":config.AgentName}
+	extrasMap := map[string]string{"type": "statefulSet", "agent": config.AgentName, "object": string(enums.STATEFULSET)}
 	return cache.NewInformer(
 		watchlist,
 		&appsV1.StatefulSet{},
@@ -1126,11 +1126,11 @@ func (k k8sService) ListenStateFullSetSetEvents() (cache.Store, cache.Controller
 				statefulSet := obj.(*appsV1.StatefulSet)
 				if _, ok := statefulSet.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   statefulSet,
+						Body: statefulSet,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.ADD,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("add StatefulSet: ", statefulSet.Name)
@@ -1140,11 +1140,11 @@ func (k k8sService) ListenStateFullSetSetEvents() (cache.Store, cache.Controller
 				statefulSet := obj.(*appsV1.StatefulSet)
 				if _, ok := statefulSet.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   statefulSet,
+						Body: statefulSet,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.DELETE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("delete StatefulSet: ", statefulSet.Name)
@@ -1163,11 +1163,11 @@ func (k k8sService) ListenStateFullSetSetEvents() (cache.Store, cache.Controller
 				}
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body:   obj,
+						Body: obj,
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
-							Extras: extrasMap,
+							Extras:  extrasMap,
 						},
 					})
 					log.Println("old StatefulSet:", oldK8sObj.Name, ", new StatefulSet:", newK8sObj.Name)
