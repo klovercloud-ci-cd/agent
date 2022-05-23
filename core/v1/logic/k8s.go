@@ -1110,6 +1110,88 @@ func (k k8sService) ListenStateFullSetSetEvents() (cache.Store, cache.Controller
 	)
 }
 
+func (k k8sService) ListenKubeEvents() (cache.Store, cache.Controller) {
+	watchlist := cache.NewListWatchFromClient(k.kcs.CoreV1().RESTClient(), "events", "",
+		fields.Everything())
+	extrasMap := map[string]string{"agent": config.AgentName, "object": string(enums.EVENT)}
+	return cache.NewInformer(
+		watchlist,
+		&coreV1.Event{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				eventObj := obj.(*coreV1.Event)
+				if eventObj.InvolvedObject.Kind == "Pod" {
+					pod, err := k.kcs.CoreV1().Pods(eventObj.InvolvedObject.Namespace).Get(context.TODO(), eventObj.InvolvedObject.Name, metaV1.GetOptions{})
+					if err != nil {
+						log.Println(err.Error())
+					} else {
+						if _, ok := pod.Labels["klovercloud_ci"]; ok {
+							k.kubeEventPublisher.Publish(v1.KubeEventMessage{
+								Body: eventObj,
+								Header: v1.MessageHeader{
+									Offset:  0,
+									Command: enums.ADD,
+									Extras:  extrasMap,
+								},
+							})
+							log.Println("action:", "add", "type", eventObj.Type, "kind:", eventObj.InvolvedObject.Kind, " reason:", eventObj.Reason, " age:", eventObj.CreationTimestamp, " from:", eventObj.InvolvedObject.Name, "", "msg:", eventObj.Message)
+						}
+					}
+				}
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				oldK8sObj := oldObj.(*coreV1.Event)
+				newK8sObj := newObj.(*coreV1.Event)
+				obj := KubeObject{
+					OldK8sObj: oldK8sObj,
+					NewK8sObj: newK8sObj,
+				}
+				if newK8sObj.InvolvedObject.Kind == "Pod" {
+					pod, err := k.kcs.CoreV1().Pods(newK8sObj.InvolvedObject.Namespace).Get(context.TODO(), newK8sObj.InvolvedObject.Name, metaV1.GetOptions{})
+					if err != nil {
+						log.Println(err.Error())
+					} else {
+						if _, ok := pod.Labels["klovercloud_ci"]; ok {
+							k.kubeEventPublisher.Publish(v1.KubeEventMessage{
+								Body: obj,
+								Header: v1.MessageHeader{
+									Offset:  0,
+									Command: enums.UPDATE,
+									Extras:  extrasMap,
+								},
+							})
+							log.Println("action:", "add", "type", newK8sObj.Type, "kind:", newK8sObj.InvolvedObject.Kind, " reason:", newK8sObj.Reason, " age:", newK8sObj.CreationTimestamp, " from:", newK8sObj.InvolvedObject.Name, "", "msg:", newK8sObj.Message)
+						}
+					}
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				eventObj := obj.(*coreV1.Event)
+				if eventObj.InvolvedObject.Kind == "Pod" {
+					pod, err := k.kcs.CoreV1().Pods(eventObj.InvolvedObject.Namespace).Get(context.TODO(), eventObj.InvolvedObject.Name, metaV1.GetOptions{})
+					if err != nil {
+						log.Println(err.Error())
+					} else {
+						if _, ok := pod.Labels["klovercloud_ci"]; ok {
+							k.kubeEventPublisher.Publish(v1.KubeEventMessage{
+								Body: eventObj,
+								Header: v1.MessageHeader{
+									Offset:  0,
+									Command: enums.DELETE,
+									Extras:  extrasMap,
+								},
+							})
+							log.Println("action:", "add", "type", eventObj.Type, "kind:", eventObj.InvolvedObject.Kind, " reason:", eventObj.Reason, " age:", eventObj.CreationTimestamp, " from:", eventObj.InvolvedObject.Name, "", "msg:", eventObj.Message)
+						}
+					}
+
+				}
+			},
+		},
+	)
+}
+
 func (k k8sService) Apply(data unstructured.Unstructured) error {
 	_, err := k.Deploy(&data)
 	if err != nil {

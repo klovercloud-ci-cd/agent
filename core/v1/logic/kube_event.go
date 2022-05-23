@@ -27,9 +27,8 @@ func (k kubeEventService) GetK8sObjectChangeEvents() {
 	_, clusterrolebindings_controller := k.k8s.ListenClusterRoleBindingEvents()
 	_, networkPolicy_controller := k.k8s.ListenNetworkPolicyEvents()
 	_, ingress_controller := k.k8s.ListenIngressEvents()
-
+	_, kubeEvent_controller := k.k8s.ListenKubeEvents()
 	stop := make(chan struct{})
-
 	go namespace_controller.Run(stop)
 	go pod_controller.Run(stop)
 	go deployment_controller.Run(stop)
@@ -48,6 +47,7 @@ func (k kubeEventService) GetK8sObjectChangeEvents() {
 	go clusterrolebindings_controller.Run(stop)
 	go networkPolicy_controller.Run(stop)
 	go ingress_controller.Run(stop)
+	go kubeEvent_controller.Run(stop)
 }
 
 func NewKubeEventService(k8s service.K8s) service.KubeEvent {

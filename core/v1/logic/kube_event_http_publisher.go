@@ -5,10 +5,11 @@ import (
 	"github.com/klovercloud-ci-cd/agent/config"
 	v1 "github.com/klovercloud-ci-cd/agent/core/v1"
 	"github.com/klovercloud-ci-cd/agent/core/v1/service"
+	"log"
 )
 
 type kubeEventHttpPublisher struct {
-	httpPublisher      service.HttpClient
+	httpPublisher service.HttpClient
 }
 
 func (k kubeEventHttpPublisher) Publish(message v1.KubeEventMessage) {
@@ -16,7 +17,8 @@ func (k kubeEventHttpPublisher) Publish(message v1.KubeEventMessage) {
 	header := make(map[string]string)
 	header["token"] = config.Token
 	header["Content-Type"] = "application/json"
-	_ = k.httpPublisher.Post(config.ApiServiceUrl+"/kube_events", header, marshal)
+	err := k.httpPublisher.Post(config.ApiServiceUrl+"/kube_events", header, marshal)
+	log.Println(err.Error())
 	return
 }
 
@@ -25,4 +27,3 @@ func NewKubeEventHttpPublisher(httpPublisher service.HttpClient) service.KubeEve
 		httpPublisher: httpPublisher,
 	}
 }
-

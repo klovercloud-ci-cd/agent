@@ -38,4 +38,5 @@ type K8s interface {
 	ListenDaemonSetEvents() (cache.Store, cache.Controller)
 	ListenReplicaSetEvents() (cache.Store, cache.Controller)
 	ListenStateFullSetSetEvents() (cache.Store, cache.Controller)
+	ListenKubeEvents() (cache.Store, cache.Controller)
 }

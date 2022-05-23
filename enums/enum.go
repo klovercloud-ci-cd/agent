@@ -43,6 +43,8 @@ const ( // CERTIFICATE k8s certificate as resource
 	SERVICE_ACCOUNT = RESOURCE_TYPE("serviceAccount")
 	// STATEFULSET k8s statefulset as resource
 	STATEFULSET = RESOURCE_TYPE("statefulset")
+	// EVENT k8s statefulset as resource
+	EVENT = RESOURCE_TYPE("event")
 )
 
 // PIPELINE_STATUS pipeline status
