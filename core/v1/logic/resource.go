@@ -56,6 +56,8 @@ func (r resourceService) Pull() {
 			subject.EventData["log"] = subject.Log
 			subject.EventData["footmark"] = enums.POST_AGENT_JOB
 			subject.EventData["status"] = enums.DEPLOYMENT_FAILED
+			subject.EventData["step"] = each.Name
+			subject.EventData["company_id"] =  each.Pipeline.MetaData.CompanyId
 			subject.EventData["claim"] = strconv.Itoa(each.Claim)
 			go r.notifyAll(subject)
 		}
@@ -68,6 +70,8 @@ func (r resourceService) Update(resource v1.Resource) error {
 		processEventData := make(map[string]interface{})
 		processEventData["step"] = resource.Step
 		processEventData["type"] = resource.Type
+		processEventData["step"] = resource.Name
+		processEventData["company_id"] =  resource.Pipeline.MetaData.CompanyId
 		processEventData["footmark"] = enums.INIT_AGNET_JOB
 		processEventData["claim"] = strconv.Itoa(resource.Claim)
 		listener := v1.Subject{Log: "Deploy Step Started", ProcessId: resource.ProcessId, Step: resource.Step}

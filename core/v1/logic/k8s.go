@@ -1251,6 +1251,8 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 	subject.EventData["log"] = subject.Log
 	subject.EventData["reason"] = "n/a"
 	subject.EventData["status"] = enums.INITIALIZING
+	subject.EventData["step"] = resource.Name
+	subject.EventData["company_id"] =  resource.Pipeline.MetaData.CompanyId
 	subject.EventData["claim"] = strconv.Itoa(resource.Claim)
 	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -1387,6 +1389,8 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 	subject.EventData["log"] = subject.Log
 	subject.EventData["reason"] = "n/a"
 	subject.EventData["status"] = enums.INITIALIZING
+	subject.EventData["step"] = resource.Name
+	subject.EventData["company_id"] =  resource.Pipeline.MetaData.CompanyId
 	subject.EventData["claim"] = strconv.Itoa(resource.Claim)
 	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
