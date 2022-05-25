@@ -1296,6 +1296,8 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 		}
 		result.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		result.Labels["klovercloud_ci"] = "enabled"
+		result.Labels["process_id"]=resource.ProcessId
+		result.Labels["claim"]=strconv.Itoa(resource.Claim)
 		deploy, updateErr := k.PatchDeploymentObject(prev, result)
 		if updateErr != nil {
 			log.Println("patchError:", err.Error())
@@ -1414,6 +1416,8 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 		}
 		result.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		result.Labels["klovercloud_ci"] = "enabled"
+		result.Labels["process_id"]=resource.ProcessId
+		result.Labels["claim"]=strconv.Itoa(resource.Claim)
 		listOptions := metaV1.ListOptions{LabelSelector: labels.FormatLabels(result.Labels)}
 		podList, err := k.kcs.CoreV1().Pods(resource.Namespace).List(context.TODO(), listOptions)
 		if err != nil {

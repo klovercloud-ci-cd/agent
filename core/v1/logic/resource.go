@@ -64,7 +64,7 @@ func (r resourceService) Pull() {
 
 func (r resourceService) Update(resource v1.Resource) error {
 	for _, each := range *resource.Descriptors {
-		each.SetLabels(map[string]string{"company": resource.Pipeline.MetaData.CompanyId, "klovercloud_ci": "enabled"})
+		each.SetLabels(map[string]string{"company": resource.Pipeline.MetaData.CompanyId, "klovercloud_ci": "enabled","process_id":resource.ProcessId,"claim":strconv.Itoa(resource.Claim)})
 		processEventData := make(map[string]interface{})
 		processEventData["step"] = resource.Step
 		processEventData["type"] = resource.Type
