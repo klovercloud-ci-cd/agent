@@ -18,7 +18,9 @@ func (k kubeEventHttpPublisher) Publish(message v1.KubeEventMessage) {
 	header["token"] = config.Token
 	header["Content-Type"] = "application/json"
 	err := k.httpPublisher.Post(config.ApiServiceUrl+"/kube_events", header, marshal)
-	log.Println(err.Error())
+	if err!=nil {
+		log.Println(err.Error())
+	}
 	return
 }
 

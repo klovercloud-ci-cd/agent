@@ -57,6 +57,7 @@ func (r resourceService) Pull() {
 			subject.EventData["footmark"] = enums.POST_AGENT_JOB
 			subject.EventData["status"] = enums.DEPLOYMENT_FAILED
 			subject.EventData["step"] = each.Name
+			subject.EventData["process_id"] = each.ProcessId
 			subject.EventData["company_id"] =  each.Pipeline.MetaData.CompanyId
 			subject.EventData["claim"] = strconv.Itoa(each.Claim)
 			go r.notifyAll(subject)
@@ -70,21 +71,25 @@ func (r resourceService) Update(resource v1.Resource) error {
 		processEventData := make(map[string]interface{})
 		processEventData["step"] = resource.Step
 		processEventData["type"] = resource.Type
-		processEventData["step"] = resource.Name
+		processEventData["process_id"] = resource.ProcessId
 		processEventData["company_id"] =  resource.Pipeline.MetaData.CompanyId
 		processEventData["footmark"] = enums.INIT_AGNET_JOB
 		processEventData["claim"] = strconv.Itoa(resource.Claim)
 		listener := v1.Subject{Log: "Deploy Step Started", ProcessId: resource.ProcessId, Step: resource.Step}
 		listener.EventData = processEventData
 		go r.notifyAll(listener)
-		r.K8s.Apply(each)
+		err:=r.K8s.Apply(each)
+		if err!=nil{
+			listener.Log=err.Error()
+			go r.notifyAll(listener)
+		}
 	}
 	if resource.Name == "" {
-		subject := v1.Subject{resource.Step, "Updated Successfully", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"footmark": enums.POST_AGENT_JOB, "log": "Updated Successfully", "reason": "n/a", "status": enums.SUCCESSFUL, "claim": strconv.Itoa(resource.Claim)}, nil, resource.Pipeline}
+		subject := v1.Subject{resource.Step, "Updated Successfully", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"footmark": enums.POST_AGENT_JOB, "log": "Updated Successfully", "reason": "n/a", "step":resource.Step,"process_id":resource.ProcessId,"company_id":resource.Pipeline.MetaData.CompanyId,"status": enums.SUCCESSFUL, "claim": strconv.Itoa(resource.Claim)}, nil, resource.Pipeline}
 		go r.notifyAll(subject)
 		return nil
 	}
-	subject := v1.Subject{resource.Step, "Updating resource", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"footmark": enums.UPDATE_RESOURCE, "log": "Updating resource", "reason": "n/a", "status": enums.SUCCESSFUL, "claim": strconv.Itoa(resource.Claim)}, nil, resource.Pipeline}
+	subject := v1.Subject{resource.Step, "Updating resource", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"footmark": enums.UPDATE_RESOURCE, "log": "Updating resource", "reason": "n/a","step":resource.Step,"process_id":resource.ProcessId,"company_id":resource.Pipeline.MetaData.CompanyId, "status": enums.SUCCESSFUL, "claim": strconv.Itoa(resource.Claim)}, nil, resource.Pipeline}
 	go r.notifyAll(subject)
 	if resource.Type == enums.DEPLOYMENT {
 		return r.K8s.UpdateDeployment(resource)

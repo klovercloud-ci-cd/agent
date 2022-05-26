@@ -1196,6 +1196,7 @@ func (k k8sService) Apply(data unstructured.Unstructured) error {
 	_, err := k.Deploy(&data)
 	if err != nil {
 		log.Println(err.Error())
+		return err
 	}
 	return nil
 }
@@ -1233,9 +1234,14 @@ func (k k8sService) Deploy(data *unstructured.Unstructured) (bool, error) {
 
 		if resource.Namespaced {
 			_, err = k.dynamicClient.Resource(groupVersionResource).Namespace(namespace).Create(context.Background(), data, metaV1.CreateOptions{})
-
+			if err!=nil{
+				_,err=k.dynamicClient.Resource(groupVersionResource).Namespace(namespace).Update(context.Background(), data, metaV1.UpdateOptions{})
+			}
 		} else {
 			_, err = k.dynamicClient.Resource(groupVersionResource).Create(context.Background(), data, metaV1.CreateOptions{})
+			if err!=nil{
+				_,err=k.dynamicClient.Resource(groupVersionResource).Namespace(namespace).Update(context.Background(), data, metaV1.UpdateOptions{})
+			}
 		}
 		if err != nil {
 			return false, err
@@ -1251,7 +1257,8 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 	subject.EventData["log"] = subject.Log
 	subject.EventData["reason"] = "n/a"
 	subject.EventData["status"] = enums.INITIALIZING
-	subject.EventData["step"] = resource.Name
+	subject.EventData["step"] = resource.Step
+	subject.EventData["process_id"] = resource.ProcessId
 	subject.EventData["company_id"] =  resource.Pipeline.MetaData.CompanyId
 	subject.EventData["claim"] = strconv.Itoa(resource.Claim)
 	go k.notifyAll(subject)
@@ -1278,7 +1285,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 			}
 		}
 
-		listOptions := metaV1.ListOptions{LabelSelector: labels.FormatLabels(result.Labels)}
+		listOptions := metaV1.ListOptions{LabelSelector: labels.FormatLabels(result.Spec.Selector.MatchLabels)}
 		podList, err := k.kcs.CoreV1().Pods(resource.Namespace).List(context.TODO(), listOptions)
 		if err != nil {
 			subject.Log = "Failed to list Existing Pods!"
@@ -1302,7 +1309,8 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 		result.Labels["claim"]=strconv.Itoa(resource.Claim)
 		deploy, updateErr := k.PatchDeploymentObject(prev, result)
 		if updateErr != nil {
-			log.Println("patchError:", err.Error())
+			subject.Log = updateErr.Error()
+			log.Println("patchError:", updateErr.Error())
 		}
 		if updateErr == nil && *deploy.Spec.Replicas > 0 {
 			subject.Log = "Waiting until pod is ready!"
@@ -1311,7 +1319,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 			subject.EventData["status"] = enums.PROCESSING
 			go k.notifyAll(subject)
 			var timeout = 30
-			err := k.WaitForPodBySelectorUntilRunning(resource.Step, deploy.Name, deploy.Namespace, resource.ProcessId, labels.FormatLabels(deploy.Labels), timeout, existingPodName, resource.Claim)
+			err := k.WaitForPodBySelectorUntilRunning(resource.Pipeline.MetaData.CompanyId,resource.Step, deploy.Name, deploy.Namespace, resource.ProcessId, labels.FormatLabels(deploy.Labels), timeout, existingPodName, resource.Claim)
 			if err != nil {
 				return err
 			}
@@ -1346,7 +1354,9 @@ func (k k8sService) PatchDeploymentObject(cur, mod *appsV1.Deployment) (*appsV1.
 	if len(patch) == 0 || string(patch) == "{}" {
 		return cur, nil
 	}
-	out, err := k.kcs.AppsV1().Deployments(cur.Namespace).Patch(context.TODO(), cur.Name, types.StrategicMergePatchType, patch, metaV1.PatchOptions{})
+	out, err := k.kcs.AppsV1().Deployments(cur.Namespace).Patch(context.TODO(), cur.Name, types.StrategicMergePatchType, patch, metaV1.PatchOptions{
+		//Force:&force,
+	})
 	return out, err
 }
 
@@ -1389,7 +1399,7 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 	subject.EventData["log"] = subject.Log
 	subject.EventData["reason"] = "n/a"
 	subject.EventData["status"] = enums.INITIALIZING
-	subject.EventData["step"] = resource.Name
+	subject.EventData["step"] = resource.Step
 	subject.EventData["company_id"] =  resource.Pipeline.MetaData.CompanyId
 	subject.EventData["claim"] = strconv.Itoa(resource.Claim)
 	go k.notifyAll(subject)
@@ -1443,7 +1453,7 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 			subject.EventData["status"] = enums.PROCESSING
 			go k.notifyAll(subject)
 			var timeout = 30
-			err := k.WaitForPodBySelectorAndRevisionUntilRunning(resource.Step, statefulSet.Name, statefulSet.Namespace, resource.ProcessId, labels.FormatLabels(statefulSet.Labels), timeout, existingPodRevisions, resource.Claim)
+			err := k.WaitForPodBySelectorAndRevisionUntilRunning(resource.Pipeline.MetaData.CompanyId,resource.Step, statefulSet.Name, statefulSet.Namespace, resource.ProcessId, labels.FormatLabels(statefulSet.Labels), timeout, existingPodRevisions, resource.Claim)
 			if err != nil {
 				return err
 			}
@@ -1475,6 +1485,8 @@ func (k k8sService) UpdateDaemonSet(resource v1.Resource) error {
 		if result.Labels == nil {
 			result.Labels = make(map[string]string)
 		}
+		result.Labels["process_id"]=resource.ProcessId
+		result.Labels["claim"]=strconv.Itoa(resource.Claim)
 		result.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		result.Labels["klovercloud_ci"] = "enabled"
 		_, updateErr := k.kcs.AppsV1().DaemonSets(resource.Namespace).Update(context.TODO(), result, metaV1.UpdateOptions{})
@@ -1580,13 +1592,15 @@ func (k k8sService) ListNewPods(retryCount int, namespace, selector string, exis
 	return podList, nil
 }
 
-func (k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(step, name, namespace, processId, selector string, timeout int, revisions map[string]bool, claim int) error {
+func (k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(companyId,step, name, namespace, processId, selector string, timeout int, revisions map[string]bool, claim int) error {
 	subject := v1.Subject{step, "Listing Pods ...", name, namespace, processId, nil, nil, nil}
 	subject.EventData = make(map[string]interface{})
 	subject.EventData["log"] = subject.Log
 	subject.EventData["footmark"] = enums.POST_AGENT_JOB
 	subject.EventData["status"] = enums.PROCESSING
 	subject.EventData["reason"] = "n/a"
+	subject.EventData["company_id"] =companyId
+	subject.EventData["process_id"] =processId
 	subject.EventData["claim"] = strconv.Itoa(claim)
 	go k.notifyAll(subject)
 	podList, err := k.ListNewPodsByRevision(0, namespace, selector, revisions)
@@ -1608,12 +1622,14 @@ func (k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(step, name, name
 	return nil
 }
 
-func (k k8sService) WaitForPodBySelectorUntilRunning(step, name, namespace, processId, selector string, timeout int, existingPods map[string]bool, claim int) error {
+func (k k8sService) WaitForPodBySelectorUntilRunning(companyId,step, name, namespace, processId, selector string, timeout int, existingPods map[string]bool, claim int) error {
 	subject := v1.Subject{step, "Listing Pods ...", name, namespace, processId, nil, nil, nil}
 	subject.EventData = make(map[string]interface{})
 	subject.EventData["log"] = subject.Log
 	subject.EventData["footmark"] = enums.POST_AGENT_JOB
 	subject.EventData["status"] = enums.PROCESSING
+	subject.EventData["process_id"] = processId
+	subject.EventData["company_id"] = companyId
 	subject.EventData["reason"] = "n/a"
 	subject.EventData["claim"] = strconv.Itoa(claim)
 	go k.notifyAll(subject)
