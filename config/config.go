@@ -41,6 +41,9 @@ var EnableOpenTracing bool
 // KafkaPublisherEnabled set true if kafka publisher is enabled
 var KafkaPublisherEnabled bool
 
+// LighthouseEnabled set true if lighthouse is enabled
+var LighthouseEnabled bool
+
 // InitEnvironmentVariables initializes environment variables
 func InitEnvironmentVariables() {
 	RunMode = os.Getenv("RUN_MODE")
@@ -91,5 +94,11 @@ func InitEnvironmentVariables() {
 		KafkaPublisherEnabled = true
 	} else {
 		KafkaPublisherEnabled = false
+	}
+
+	if os.Getenv("LIGHTHOUSE_ENABLED") == "true" {
+		LighthouseEnabled = true
+	} else {
+		LighthouseEnabled = false
 	}
 }
