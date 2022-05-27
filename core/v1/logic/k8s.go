@@ -1263,6 +1263,11 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 	subject.EventData["claim"] = strconv.Itoa(resource.Claim)
 	go k.notifyAll(subject)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		subject.Log = "Applying Deployment ..."
+		subject.EventData["log"] = subject.Log
+		subject.EventData["footmark"] = enums.UPDATE_RESOURCE
+		subject.EventData["status"] = enums.PROCESSING
+		go k.notifyAll(subject)
 		result, getErr := k.GetDeployment(resource.Name, resource.Namespace)
 		if getErr != nil {
 			log.Println("Failed to get latest version of Deployment: ", getErr)
@@ -1275,23 +1280,20 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 		}
 		for i, each := range resource.Images {
 			if i > len(result.Spec.Template.Spec.Containers)-1 {
-				subject.Log = "index out of bound! ignoring container for " + each
+				subject.Log = "[WARNONG]index out of bound! ignoring container for " + each
 				subject.EventData["log"] = subject.Log
 				subject.EventData["footmark"] = enums.UPDATE_RESOURCE
-				subject.EventData["status"] = enums.PROCESSING
 				go k.notifyAll(subject)
 			} else {
 				result.Spec.Template.Spec.Containers[i].Image = each
 			}
 		}
-
-		listOptions := metaV1.ListOptions{LabelSelector: labels.FormatLabels(result.Spec.Selector.MatchLabels)}
+		listOptions := metaV1.ListOptions{LabelSelector: labels.FormatLabels(result.Spec.Template.Labels)}
 		podList, err := k.kcs.CoreV1().Pods(resource.Namespace).List(context.TODO(), listOptions)
 		if err != nil {
-			subject.Log = "Failed to list Existing Pods!"
+			subject.Log = "[WARNONG]Failed to list Existing Pods!"
 			subject.EventData["log"] = err.Error()
 			subject.EventData["footmark"] = enums.POST_AGENT_JOB
-			subject.EventData["status"] = enums.PROCESSING
 			go k.notifyAll(subject)
 		}
 		existingPodName := make(map[string]bool)
@@ -1307,7 +1309,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 		result.Labels["klovercloud_ci"] = "enabled"
 		result.Labels["process_id"]=resource.ProcessId
 		result.Labels["claim"]=strconv.Itoa(resource.Claim)
-		deploy, updateErr := k.PatchDeploymentObject(prev, result)
+		deploy, updateErr := k.PatchDeploymentObject(resource.RolloutRestart,prev, result)
 		if updateErr != nil {
 			subject.Log = updateErr.Error()
 			log.Println("patchError:", updateErr.Error())
@@ -1316,10 +1318,9 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 			subject.Log = "Waiting until pod is ready!"
 			subject.EventData["log"] = subject.Log
 			subject.EventData["footmark"] = enums.POST_AGENT_JOB
-			subject.EventData["status"] = enums.PROCESSING
 			go k.notifyAll(subject)
 			var timeout = 30
-			err := k.WaitForPodBySelectorUntilRunning(resource.Pipeline.MetaData.CompanyId,resource.Step, deploy.Name, deploy.Namespace, resource.ProcessId, labels.FormatLabels(deploy.Labels), timeout, existingPodName, resource.Claim)
+			err := k.WaitForPodBySelectorUntilRunning(resource.Pipeline.MetaData.CompanyId,resource.Step, deploy.Name, deploy.Namespace, resource.ProcessId, labels.FormatLabels(deploy.Spec.Template.Labels), timeout, existingPodName, resource.Claim)
 			if err != nil {
 				return err
 			}
@@ -1338,10 +1339,17 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 	return nil
 }
 
-func (k k8sService) PatchDeploymentObject(cur, mod *appsV1.Deployment) (*appsV1.Deployment, error) {
+func (k k8sService) PatchDeploymentObject(rolloutRestart bool,cur, mod *appsV1.Deployment) (*appsV1.Deployment, error) {
 	curJson, err := json.Marshal(cur)
 	if err != nil {
 		return nil, err
+	}
+	if rolloutRestart {
+		if mod.Spec.Template.ObjectMeta.Annotations == nil {
+			mod.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
+		}
+		mod.Spec.Template.ObjectMeta.Annotations["kubectl.kubernetes.io/restartedAt"] = time.Now().Format(time.RFC3339)
+		mod.Annotations["kubectl.kubernetes.io/restartedAt"] = time.Now().Format(time.RFC3339)
 	}
 	modJson, err := json.Marshal(mod)
 	if err != nil {
@@ -1355,7 +1363,6 @@ func (k k8sService) PatchDeploymentObject(cur, mod *appsV1.Deployment) (*appsV1.
 		return cur, nil
 	}
 	out, err := k.kcs.AppsV1().Deployments(cur.Namespace).Patch(context.TODO(), cur.Name, types.StrategicMergePatchType, patch, metaV1.PatchOptions{
-		//Force:&force,
 	})
 	return out, err
 }
@@ -1627,7 +1634,6 @@ func (k k8sService) WaitForPodBySelectorUntilRunning(companyId,step, name, names
 	subject.EventData = make(map[string]interface{})
 	subject.EventData["log"] = subject.Log
 	subject.EventData["footmark"] = enums.POST_AGENT_JOB
-	subject.EventData["status"] = enums.PROCESSING
 	subject.EventData["process_id"] = processId
 	subject.EventData["company_id"] = companyId
 	subject.EventData["reason"] = "n/a"
@@ -1640,13 +1646,14 @@ func (k k8sService) WaitForPodBySelectorUntilRunning(companyId,step, name, names
 	if len(podList.Items) == 0 {
 		return fmt.Errorf("no pods in %s with selector %s", namespace, selector)
 	}
-
 	for _, pod := range podList.Items {
+		if _,ok:=existingPods[pod.Name];ok{
+			continue
+		}
 		subject.Log = "Waiting until pods are ready ..."
 		subject.EventData["log"] = subject.Log
 		go k.notifyAll(subject)
-		if err := k.waitForPodRunning(namespace, pod.Name, time.Duration(timeout)*time.Second); err != nil {
-			log.Println(err.Error())
+		if err := k.waitForPodRunning(namespace, pod.Name, time.Duration(timeout)*time.Second*5); err != nil {
 			return err
 		}
 	}

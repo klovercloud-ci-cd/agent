@@ -15,8 +15,7 @@ type eventStoreProcessLifeCycleService struct {
 }
 
 func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
-	log.Println(subject.EventData["status"])
-	if subject.EventData["status"] == nil {
+	if subject.EventData == nil {
 		return
 	}
 	if subject.EventData != nil {
@@ -24,6 +23,7 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 		processLifeCycleEvent := v1.ProcessLifeCycleEvent{
 			ProcessId: subject.ProcessId,
 			Step:      subject.Step,
+			Agent:     config.AgentName,
 			CreatedAt: time.Now().UTC(),
 		}
 		nextSteps := []string{}
@@ -35,10 +35,10 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 				}
 			}
 		}
-		if subject.EventData["status"] == enums.DEPLOYMENT_FAILED || subject.EventData["status"] == enums.ERROR || subject.EventData["status"] == enums.TERMINATING {
+		if subject.EventData["status"] == enums.DEPLOYMENT_FAILED || subject.EventData["status"] == enums.ERROR || subject.EventData["status"] == enums.TERMINATING || subject.EventData["status"] ==enums.FAILED {
 			processLifeCycleEvent.Status = enums.FAILED
 			data = append(data, processLifeCycleEvent)
-		} else if subject.EventData["status"] == enums.SUCCESSFUL {
+		} else if subject.EventData["status"] == enums.SUCCESSFUL || subject.EventData["status"] == enums.COMPLETED{
 			processLifeCycleEvent.Status = enums.COMPLETED
 			data = append(data, processLifeCycleEvent)
 			for _, each := range nextSteps {
@@ -46,9 +46,11 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 					ProcessId: subject.ProcessId,
 					Status:    enums.PAUSED,
 					Step:      each,
+					Agent:     config.AgentName,
+					CreatedAt: time.Now().UTC(),
 				})
 			}
-		} else {
+		}else{
 			return
 		}
 		type ProcessLifeCycleEventList struct {

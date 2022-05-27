@@ -50,34 +50,39 @@ func (r resourceService) Pull() {
 	}
 	for _, each := range resources {
 		err := r.Update(each)
+		subject := v1.Subject{each.Step, "", each.Name, each.Namespace, each.ProcessId, nil, nil, nil}
+		subject.EventData=make(map[string]interface{})
+		subject.EventData["step"] = each.Name
+		subject.EventData["process_id"] = each.ProcessId
+		subject.EventData["company_id"] =  each.Pipeline.MetaData.CompanyId
+		subject.EventData["claim"] = strconv.Itoa(each.Claim)
+		subject.EventData["footmark"] = enums.POST_AGENT_JOB
 		if err != nil {
-			subject := v1.Subject{each.Step, "", each.Name, each.Namespace, each.ProcessId, map[string]interface{}{"footmark": enums.UPDATE_RESOURCE, "log": "Operation Failed! " + err.Error(), "reason": "n/a"}, nil, nil}
 			subject.Log = "Update Failed: " + err.Error()
 			subject.EventData["log"] = subject.Log
-			subject.EventData["footmark"] = enums.POST_AGENT_JOB
-			subject.EventData["status"] = enums.DEPLOYMENT_FAILED
-			subject.EventData["step"] = each.Name
-			subject.EventData["process_id"] = each.ProcessId
-			subject.EventData["company_id"] =  each.Pipeline.MetaData.CompanyId
-			subject.EventData["claim"] = strconv.Itoa(each.Claim)
+			subject.EventData["status"] = enums.FAILED
+			go r.notifyAll(subject)
+		}else {
+			subject.EventData["log"] = "Agent Job Completed"
+			subject.EventData["status"] = enums.COMPLETED
 			go r.notifyAll(subject)
 		}
 	}
 }
 
 func (r resourceService) Update(resource v1.Resource) error {
+	listener := v1.Subject{Log: "Deploy Step Started", ProcessId: resource.ProcessId, Step: resource.Step}
+	processEventData := make(map[string]interface{})
+	processEventData["step"] = resource.Step
+	processEventData["type"] = resource.Type
+	processEventData["process_id"] = resource.ProcessId
+	processEventData["company_id"] =  resource.Pipeline.MetaData.CompanyId
+	processEventData["footmark"] = enums.INIT_AGNET_JOB
+	processEventData["claim"] = strconv.Itoa(resource.Claim)
+	listener.EventData = processEventData
+	go r.notifyAll(listener)
 	for _, each := range *resource.Descriptors {
 		each.SetLabels(map[string]string{"company": resource.Pipeline.MetaData.CompanyId, "klovercloud_ci": "enabled","process_id":resource.ProcessId,"claim":strconv.Itoa(resource.Claim)})
-		processEventData := make(map[string]interface{})
-		processEventData["step"] = resource.Step
-		processEventData["type"] = resource.Type
-		processEventData["process_id"] = resource.ProcessId
-		processEventData["company_id"] =  resource.Pipeline.MetaData.CompanyId
-		processEventData["footmark"] = enums.INIT_AGNET_JOB
-		processEventData["claim"] = strconv.Itoa(resource.Claim)
-		listener := v1.Subject{Log: "Deploy Step Started", ProcessId: resource.ProcessId, Step: resource.Step}
-		listener.EventData = processEventData
-		go r.notifyAll(listener)
 		err:=r.K8s.Apply(each)
 		if err!=nil{
 			listener.Log=err.Error()
