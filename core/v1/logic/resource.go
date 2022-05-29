@@ -18,7 +18,15 @@ type resourceService struct {
 }
 
 func (r resourceService) Pull() {
-	url := config.ApiServiceUrl + "/process_life_cycle_events?count=" + config.PullSize + "&agent=" + config.AgentName
+	pullSize:=config.PullSize-config.CurrentConcurrentJobs
+	if config.CurrentConcurrentJobs<0{
+		config.CurrentConcurrentJobs=0
+	}
+	if pullSize<1{
+		log.Println("Pull size is loaded with jobs. Skipping new pulls... ")
+		return
+	}
+	url := config.ApiServiceUrl + "/process_life_cycle_events?count=" + strconv.FormatInt(pullSize, 10) + "&agent=" + config.AgentName
 	header := make(map[string]string)
 	header["Accept"] = "application/json"
 	header["Authorization"] = "Bearer " + config.Token
@@ -48,25 +56,31 @@ func (r resourceService) Pull() {
 		// send to observer
 		return
 	}
+	config.CurrentConcurrentJobs=config.CurrentConcurrentJobs+int64(len(resources))
 	for _, each := range resources {
-		err := r.Update(each)
-		subject := v1.Subject{each.Step, "", each.Name, each.Namespace, each.ProcessId, nil, nil, nil}
-		subject.EventData=make(map[string]interface{})
-		subject.EventData["step"] = each.Name
-		subject.EventData["process_id"] = each.ProcessId
-		subject.EventData["company_id"] =  each.Pipeline.MetaData.CompanyId
-		subject.EventData["claim"] = strconv.Itoa(each.Claim)
-		subject.EventData["footmark"] = enums.POST_AGENT_JOB
-		if err != nil {
-			subject.Log = "Update Failed: " + err.Error()
-			subject.EventData["log"] = subject.Log
-			subject.EventData["status"] = enums.FAILED
-			go r.notifyAll(subject)
-		}else {
-			subject.EventData["log"] = "Agent Job Completed"
-			subject.EventData["status"] = enums.COMPLETED
-			go r.notifyAll(subject)
-		}
+		go r.apply(each)
+	}
+}
+
+func (r resourceService) apply(each v1.Resource) {
+	err := r.Update(each)
+	subject := v1.Subject{each.Step, "", each.Name, each.Namespace, each.ProcessId, nil, nil, nil}
+	subject.EventData = make(map[string]interface{})
+	subject.EventData["step"] = each.Name
+	subject.EventData["process_id"] = each.ProcessId
+	subject.EventData["company_id"] = each.Pipeline.MetaData.CompanyId
+	subject.EventData["claim"] = strconv.Itoa(each.Claim)
+	subject.EventData["footmark"] = enums.POST_AGENT_JOB
+	config.CurrentConcurrentJobs = config.CurrentConcurrentJobs - 1
+	if err != nil {
+		subject.Log = "Update Failed: " + err.Error()
+		subject.EventData["log"] = subject.Log
+		subject.EventData["status"] = enums.FAILED
+		go r.notifyAll(subject)
+	} else {
+		subject.EventData["log"] = "Agent Job Completed"
+		subject.EventData["status"] = enums.COMPLETED
+		go r.notifyAll(subject)
 	}
 }
 

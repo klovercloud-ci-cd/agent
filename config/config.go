@@ -5,6 +5,7 @@ import (
 	"github.com/klovercloud-ci-cd/agent/enums"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -18,7 +19,7 @@ var ServerPort string
 var ApiServiceUrl string
 
 // PullSize refers to number of job to be pulled each time.
-var PullSize string
+var PullSize int64
 
 // IsK8 refers if application is running inside k8s.
 var IsK8 string
@@ -44,6 +45,9 @@ var KafkaPublisherEnabled bool
 // LighthouseEnabled set true if lighthouse is enabled
 var LighthouseEnabled bool
 
+// CurrentConcurrentJobs running jobs count.
+var CurrentConcurrentJobs int64
+
 // InitEnvironmentVariables initializes environment variables
 func InitEnvironmentVariables() {
 	RunMode = os.Getenv("RUN_MODE")
@@ -66,7 +70,13 @@ func InitEnvironmentVariables() {
 	}
 	ServerPort = os.Getenv("SERVER_PORT")
 	AgentName = os.Getenv("AGENT_NAME")
-	PullSize = os.Getenv("PULL_SIZE")
+	err := error(nil)
+	PullSize, err = strconv.ParseInt(os.Getenv("PULL_SIZE"), 10, 64)
+	if err != nil {
+		PullSize = 4
+	}
+	log.Println(PullSize)
+	CurrentConcurrentJobs=0
 	Publickey = os.Getenv("PUBLIC_KEY")
 	IsK8 = os.Getenv("IS_K8")
 	if os.Getenv("ENABLE_AUTHENTICATION") == "" {
