@@ -19,7 +19,7 @@ type httpClientService struct {
 }
 
 func (h httpClientService) Post(url string, header map[string]string, body []byte) error {
-	log.Println("Posting ...", url, string(body))
+	//log.Println("Posting ...", url, string(body))
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	for k, v := range header {
 		req.Header.Set(k, v)
@@ -29,16 +29,16 @@ func (h httpClientService) Post(url string, header map[string]string, body []byt
 	resp, err := client.Do(req)
 
 	if err != nil {
-		log.Println("[ERROR] Failed communicate agent:", err.Error())
+		log.Println("[ERROR] Failed communicate :", err.Error())
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Println("[ERROR] Failed communicate agent:", err.Error())
+			log.Println("[ERROR] Failed communicate :", err.Error())
 		} else {
-			log.Println("[ERROR] Failed communicate agent::", string(body))
+			log.Println("[ERROR] Failed communicate ::", string(body))
 		}
 	}
 	return nil

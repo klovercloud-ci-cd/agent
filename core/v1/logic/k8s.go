@@ -209,6 +209,7 @@ func (k k8sService) ListenPodEvents() (cache.Store, cache.Controller) {
 					OldK8sObj: oldK8sObj,
 					NewK8sObj: newK8sObj,
 				}
+				log.Println("Status:",newK8sObj.Status.Phase)
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
 						Body: obj,
@@ -1309,6 +1310,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 		result.Labels["klovercloud_ci"] = "enabled"
 		result.Labels["process_id"] = resource.ProcessId
 		result.Labels["claim"] = strconv.Itoa(resource.Claim)
+		result.Spec.Template.Labels["klovercloud_ci"] = "enabled"
 		deploy, updateErr := k.PatchDeploymentObject(resource.RolloutRestart, prev, result)
 		if updateErr != nil {
 			subject.Log = updateErr.Error()
@@ -1485,6 +1487,7 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 		result.Labels["klovercloud_ci"] = "enabled"
 		result.Labels["process_id"] = resource.ProcessId
 		result.Labels["claim"] = strconv.Itoa(resource.Claim)
+		result.Spec.Template.Labels["klovercloud_ci"] = "enabled"
 		statefulSet, updateErr := k.PatchStatefulSetObject(resource.RolloutRestart, prev, result)
 		if updateErr != nil {
 			subject.Log = updateErr.Error()
@@ -1531,6 +1534,7 @@ func (k k8sService) UpdateDaemonSet(resource v1.Resource) error {
 		result.Labels["claim"] = strconv.Itoa(resource.Claim)
 		result.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		result.Labels["klovercloud_ci"] = "enabled"
+		result.Spec.Template.Labels["klovercloud_ci"] = "enabled"
 		_, updateErr := k.kcs.AppsV1().DaemonSets(resource.Namespace).Update(context.TODO(), result, metaV1.UpdateOptions{})
 		return updateErr
 	})
