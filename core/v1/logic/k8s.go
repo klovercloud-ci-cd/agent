@@ -205,14 +205,13 @@ func (k k8sService) ListenPodEvents() (cache.Store, cache.Controller) {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				oldK8sObj := oldObj.(*coreV1.Pod)
 				newK8sObj := newObj.(*coreV1.Pod)
-				obj := KubeObject{
-					OldK8sObj: oldK8sObj,
-					NewK8sObj: newK8sObj,
-				}
 				log.Println("Status:",newK8sObj.Status.Phase)
 				if _, ok := newK8sObj.Labels["klovercloud_ci"]; ok {
 					k.kubeEventPublisher.Publish(v1.KubeEventMessage{
-						Body: obj,
+						Body: KubeObject{
+							OldK8sObj: oldK8sObj,
+							NewK8sObj: newK8sObj,
+						},
 						Header: v1.MessageHeader{
 							Offset:  0,
 							Command: enums.UPDATE,
