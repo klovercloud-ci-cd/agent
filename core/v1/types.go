@@ -14,7 +14,7 @@ type MessageHeader struct {
 }
 
 type Agent struct {
-	Name  string `json:"name"`
-	ApiVersion string `json:"api_version"`
-	Terminal   string `json:"terminal"`
+	Name            string `json:"name"`
+	ApiVersion      string `json:"api_version"`
+	TerminalBaseUrl string `bson:"terminal_base_url" json:"terminal_base_url"`
 }
