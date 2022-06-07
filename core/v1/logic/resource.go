@@ -75,11 +75,11 @@ func (r resourceService) apply(each v1.Resource) {
 	if err != nil {
 		subject.Log = "Update Failed: " + err.Error()
 		subject.EventData["log"] = subject.Log
-		subject.EventData["status"] = enums.FAILED
+		subject.EventData["status"] = enums.DEPLOYMENT_FAILED
 		go r.notifyAll(subject)
 	} else {
 		subject.EventData["log"] = "Agent Job Completed"
-		subject.EventData["status"] = enums.COMPLETED
+		subject.EventData["status"] = enums.SUCCESSFUL
 		go r.notifyAll(subject)
 	}
 }
@@ -89,6 +89,7 @@ func (r resourceService) Update(resource v1.Resource) error {
 	processEventData := make(map[string]interface{})
 	processEventData["step"] = resource.Step
 	processEventData["type"] = resource.Type
+	processEventData["status"] =enums.INITIALIZING
 	processEventData["process_id"] = resource.ProcessId
 	processEventData["company_id"] =  resource.Pipeline.MetaData.CompanyId
 	processEventData["footmark"] = enums.INIT_AGNET_JOB
