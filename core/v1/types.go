@@ -12,3 +12,9 @@ type MessageHeader struct {
 	Command enums.Command     `json:"command"`
 	Extras  map[string]string `json:"extras"`
 }
+
+type Agent struct {
+	Agent  string `json:"agent"`
+	ApiVersion string `json:"api_version"`
+	Terminal   string `json:"terminal"`
+}

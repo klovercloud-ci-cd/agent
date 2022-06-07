@@ -30,6 +30,7 @@ func GetV1JwtService() service.Jwt {
 	return logic.NewJwtService()
 }
 
+// GetV1KubeEventService returns KubeEvent service
 func GetV1KubeEventService() service.KubeEvent {
 	var observers []service.Observer
 	eventStoreLogEventService := logic.NewEventStoreLogEventService(logic.NewHttpClientService())
@@ -46,4 +47,11 @@ func GetV1KubeEventService() service.KubeEvent {
 		kubeEventPublisher = logic.NewKubeEventHttpPublisher(logic.NewHttpClientService())
 	}
 	return logic.NewKubeEventService(logic.NewK8sService(k8sClientSet, dynamicClient, discoveryClient, observers, kubeEventPublisher))
+}
+
+
+
+// GetV1HttpClient returns HttpClient service
+func GetV1HttpClient()service.HttpClient{
+	return logic.NewHttpClientService()
 }

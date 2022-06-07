@@ -1,13 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/klovercloud-ci-cd/agent/api"
 	"github.com/klovercloud-ci-cd/agent/config"
+	v1 "github.com/klovercloud-ci-cd/agent/core/v1"
 	"github.com/klovercloud-ci-cd/agent/core/v1/service"
 	"github.com/klovercloud-ci-cd/agent/dependency"
 	_ "github.com/klovercloud-ci-cd/agent/docs"
 	"github.com/labstack/echo-contrib/jaegertracing"
 	"io"
+	"log"
 	"time"
 )
 
@@ -24,6 +27,7 @@ func main() {
 			}
 		}(c)
 	}
+	go JoinIntegrationManager(dependency.GetV1HttpClient())
 	api.Routes(e)
 	resourceService := dependency.GetV1ResourceService()
 	go ContinuePullingAgentEvent(resourceService)
@@ -39,4 +43,26 @@ func ContinuePullingAgentEvent(service service.Resource) {
 	service.Pull()
 	time.Sleep(time.Millisecond)
 	ContinuePullingAgentEvent(service)
+}
+
+// JoinIntegrationManager joins clusters terminal with integration manager
+func JoinIntegrationManager(client service.HttpClient) error{
+	data:=v1.Agent{
+		Agent:      config.AgentName,
+		ApiVersion: config.TerminalApiVersion,
+		Terminal:   config.TerminalBaseUrl,
+	}
+	header := make(map[string]string)
+	header["Content-Type"] = "application/json"
+	header["token"] = config.Token
+	bytes, err := json.Marshal(data)
+	if err!=nil{
+		log.Println(err.Error())
+		return err
+	}
+	err=client.Post(config.ApiServiceUrl+"/agents",header,bytes)
+	if err!=nil{
+		log.Println(err.Error())
+	}
+	return err
 }

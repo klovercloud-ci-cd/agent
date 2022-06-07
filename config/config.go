@@ -48,6 +48,12 @@ var LighthouseEnabled bool
 // CurrentConcurrentJobs running jobs count.
 var CurrentConcurrentJobs int64
 
+// TerminalBaseUrl base url of terminal.
+var TerminalBaseUrl string
+
+// TerminalApiVersion api version of terminal.
+var TerminalApiVersion string
+
 // InitEnvironmentVariables initializes environment variables
 func InitEnvironmentVariables() {
 	RunMode = os.Getenv("RUN_MODE")
@@ -70,6 +76,8 @@ func InitEnvironmentVariables() {
 	}
 	ServerPort = os.Getenv("SERVER_PORT")
 	AgentName = os.Getenv("AGENT_NAME")
+	TerminalBaseUrl = os.Getenv("TERMINAL_BASE_URL")
+	TerminalApiVersion=os.Getenv("TERMINAL_API_VERSION")
 	err := error(nil)
 	PullSize, err = strconv.ParseInt(os.Getenv("PULL_SIZE"), 10, 64)
 	if err != nil {
