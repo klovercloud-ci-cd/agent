@@ -48,7 +48,7 @@ func ContinuePullingAgentEvent(service service.Resource) {
 // JoinIntegrationManager joins clusters terminal with integration manager
 func JoinIntegrationManager(client service.HttpClient) error{
 	data:=v1.Agent{
-		Agent:      config.AgentName,
+		Name:      config.AgentName,
 		ApiVersion: config.TerminalApiVersion,
 		Terminal:   config.TerminalBaseUrl,
 	}

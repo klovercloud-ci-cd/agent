@@ -14,7 +14,7 @@ type MessageHeader struct {
 }
 
 type Agent struct {
-	Agent  string `json:"agent"`
+	Name  string `json:"name"`
 	ApiVersion string `json:"api_version"`
 	Terminal   string `json:"terminal"`
 }
