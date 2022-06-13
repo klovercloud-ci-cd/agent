@@ -1310,6 +1310,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 		result.Labels["process_id"] = resource.ProcessId
 		result.Labels["claim"] = strconv.Itoa(resource.Claim)
 		result.Spec.Template.Labels["klovercloud_ci"] = "enabled"
+		result.Spec.Template.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		deploy, updateErr := k.PatchDeploymentObject(resource.RolloutRestart, prev, result)
 		if updateErr != nil {
 			subject.Log = updateErr.Error()
@@ -1486,7 +1487,9 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 		result.Labels["klovercloud_ci"] = "enabled"
 		result.Labels["process_id"] = resource.ProcessId
 		result.Labels["claim"] = strconv.Itoa(resource.Claim)
+		result.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		result.Spec.Template.Labels["klovercloud_ci"] = "enabled"
+		result.Spec.Template.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		statefulSet, updateErr := k.PatchStatefulSetObject(resource.RolloutRestart, prev, result)
 		if updateErr != nil {
 			subject.Log = updateErr.Error()
@@ -1534,6 +1537,7 @@ func (k k8sService) UpdateDaemonSet(resource v1.Resource) error {
 		result.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		result.Labels["klovercloud_ci"] = "enabled"
 		result.Spec.Template.Labels["klovercloud_ci"] = "enabled"
+		result.Spec.Template.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		_, updateErr := k.kcs.AppsV1().DaemonSets(resource.Namespace).Update(context.TODO(), result, metaV1.UpdateOptions{})
 		return updateErr
 	})
@@ -1585,6 +1589,13 @@ func (k k8sService) isPodRunning(podName, namespace string) wait.ConditionFunc {
 		case coreV1.PodFailed, coreV1.PodSucceeded:
 			return false, errors.New("Pod has error!")
 		case coreV1.PodPending:
+			for _,container:= range  pod.Status.ContainerStatuses{
+				if container.State.Waiting!=nil{
+					return false, errors.New(container.State.Waiting.Message+" Reason:"+container.State.Waiting.Reason)
+				}else if container.State.Terminated!=nil{
+					return false, errors.New(container.State.Terminated.Message+" Reason:"+container.State.Terminated.Reason)
+				}
+			}
 			if len(pod.Status.Conditions) > 0 {
 				return false, errors.New(pod.Status.Conditions[len(pod.Status.Conditions)].Message)
 			}
