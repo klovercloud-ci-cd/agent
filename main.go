@@ -41,7 +41,7 @@ func main() {
 // ContinuePullingAgentEvent routine that pulls deploy steps in every interval.
 func ContinuePullingAgentEvent(service service.Resource) {
 	service.Pull()
-	time.Sleep(time.Millisecond)
+	time.Sleep(time.Millisecond*500)
 	ContinuePullingAgentEvent(service)
 }
 

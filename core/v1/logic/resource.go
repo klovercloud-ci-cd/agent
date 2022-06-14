@@ -45,10 +45,11 @@ func (r resourceService) Pull() {
 	}
 	b, err := json.Marshal(response.Data)
 	if err != nil {
-		log.Println(err.Error())
+		//log.Println(err.Error())
 		// send to observer
 		return
 	}
+
 	resources := []v1.Resource{}
 	err = json.Unmarshal(b, &resources)
 	if err != nil {
