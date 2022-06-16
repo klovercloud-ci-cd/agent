@@ -67,7 +67,7 @@ func (r resourceService) apply(each v1.Resource) {
 	err := r.Update(each)
 	subject := v1.Subject{each.Step, "", each.Name, each.Namespace, each.ProcessId, nil, nil, nil}
 	subject.EventData = make(map[string]interface{})
-	subject.EventData["step"] = each.Name
+	subject.EventData["step"] = each.Step
 	subject.EventData["process_id"] = each.ProcessId
 	subject.EventData["company_id"] = each.Pipeline.MetaData.CompanyId
 	subject.EventData["claim"] = strconv.Itoa(each.Claim)
