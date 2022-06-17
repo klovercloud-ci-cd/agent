@@ -110,7 +110,7 @@ func (r resourceService) Update(resource v1.Resource) error {
 		go r.notifyAll(subject)
 		return nil
 	}
-	subject := v1.Subject{resource.Step, "Updating resource", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"footmark": enums.UPDATE_RESOURCE, "log": "Updating resource", "reason": "n/a", "step": resource.Step, "process_id": resource.ProcessId, "company_id": resource.Pipeline.MetaData.CompanyId, "status": enums.SUCCESSFUL, "claim": strconv.Itoa(resource.Claim)}, nil, resource.Pipeline}
+	subject := v1.Subject{resource.Step, "Updating resource", resource.Name, resource.Namespace, resource.ProcessId, map[string]interface{}{"footmark": enums.UPDATE_RESOURCE, "log": "Updating resource", "reason": "n/a", "step": resource.Step, "process_id": resource.ProcessId, "company_id": resource.Pipeline.MetaData.CompanyId, "status": enums.PROCESSING, "claim": strconv.Itoa(resource.Claim)}, nil, resource.Pipeline}
 	go r.notifyAll(subject)
 	if resource.Type == enums.DEPLOYMENT {
 		return r.K8s.UpdateDeployment(resource)

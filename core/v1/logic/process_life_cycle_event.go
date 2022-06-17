@@ -39,6 +39,7 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 			processLifeCycleEvent.Status = enums.FAILED
 			data = append(data, processLifeCycleEvent)
 		} else if subject.EventData["status"] == enums.SUCCESSFUL || subject.EventData["status"] == enums.COMPLETED{
+			log.Println(subject.EventData["status"])
 			processLifeCycleEvent.Status = enums.COMPLETED
 			data = append(data, processLifeCycleEvent)
 			for _, each := range nextSteps {
