@@ -10,3 +10,24 @@
   / ___ \  | |_| | | |___  | |\  |   | |  
  /_/   \_\  \____| |_____| |_| \_|   |_|  
 ```
+
+
+## Responsibility
+
+- Handles deploy jobs.
+- Cluster agent for klovercloudCD.
+- Talks with [Event bank](https://github.com/klovercloud-ci-cd/event-bank) via [Api Service](https://github.com/klovercloud-ci-cd/api-service).
+
+
+| Versions | Descriptors  |
+|----------|-------------|
+| [v0.0.1-beta](https://github.com/klovercloud-ci-cd/agent/releases/tag/v0.0.1-beta) | [k8s](k8s/v0.0.1-beta) |
+
+
+## Want to contribute
+
+- See [CONTRIBUTING.md](https://github.com/klovercloud-ci-cd/core-engine/blob/master/markdownfiles/CONTRIBUTING.md)
+- See [DEVELOPMENT.md](https://github.com/klovercloud-ci-cd/core-engine/blob/master/markdownfiles/DEVELOPMENT.md) to get start
+- See [architecture](https://github.com/klovercloud-ci-cd/architecture)
+- Look at our
+  [our issues](https://github.com/klovercloud-ci-cd/agent/issues)
