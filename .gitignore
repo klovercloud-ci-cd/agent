@@ -5,5 +5,4 @@
 *.ini
 /out/
 *.exe
-k8s
 .env
