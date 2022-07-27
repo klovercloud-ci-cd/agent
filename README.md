@@ -28,6 +28,6 @@
 
 - See [CONTRIBUTING.md](https://github.com/klovercloud-ci-cd/core-engine/blob/master/markdownfiles/CONTRIBUTING.md)
 - See [DEVELOPMENT.md](https://github.com/klovercloud-ci-cd/core-engine/blob/master/markdownfiles/DEVELOPMENT.md) to get start
-- See [architecture](https://github.com/klovercloud-ci-cd/architecture)
+- See [architecture](https://github.com/klovercloud-ci-cd/architecture/blob/master/README.md)
 - Look at our
   [our issues](https://github.com/klovercloud-ci-cd/agent/issues)
