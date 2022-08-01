@@ -1310,6 +1310,8 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 		result.Labels["process_id"] = resource.ProcessId
 		result.Labels["claim"] = strconv.Itoa(resource.Claim)
 		result.Spec.Template.Labels["klovercloud_ci"] = "enabled"
+		result.Spec.Template.Labels["claim"] = strconv.Itoa(resource.Claim)
+		result.Spec.Template.Labels["process_id"] = resource.ProcessId
 		result.Spec.Template.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		deploy, updateErr := k.PatchDeploymentObject(resource.RolloutRestart, prev, result)
 		if updateErr != nil {
@@ -1490,6 +1492,8 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 		result.Labels["company"] = resource.Pipeline.MetaData.CompanyId
 		result.Spec.Template.Labels["klovercloud_ci"] = "enabled"
 		result.Spec.Template.Labels["company"] = resource.Pipeline.MetaData.CompanyId
+		result.Spec.Template.Labels["claim"] = strconv.Itoa(resource.Claim)
+		result.Spec.Template.Labels["process_id"] = resource.ProcessId
 		statefulSet, updateErr := k.PatchStatefulSetObject(resource.RolloutRestart, prev, result)
 		if updateErr != nil {
 			subject.Log = updateErr.Error()
@@ -1538,6 +1542,8 @@ func (k k8sService) UpdateDaemonSet(resource v1.Resource) error {
 		result.Labels["klovercloud_ci"] = "enabled"
 		result.Spec.Template.Labels["klovercloud_ci"] = "enabled"
 		result.Spec.Template.Labels["company"] = resource.Pipeline.MetaData.CompanyId
+		result.Spec.Template.Labels["claim"] = strconv.Itoa(resource.Claim)
+		result.Spec.Template.Labels["process_id"] = resource.ProcessId
 		_, updateErr := k.kcs.AppsV1().DaemonSets(resource.Namespace).Update(context.TODO(), result, metaV1.UpdateOptions{})
 		return updateErr
 	})
