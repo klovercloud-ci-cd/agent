@@ -1321,7 +1321,7 @@ func (k k8sService) UpdateDeployment(resource v1.Resource) error {
 			subject.EventData["log"] = subject.Log
 			subject.EventData["footmark"] = enums.POST_AGENT_JOB
 			go k.notifyAll(subject)
-			err := k.WaitForPodBySelectorUntilRunning(resource.Pipeline.MetaData.CompanyId, resource.Step, deploy.Name, deploy.Namespace, resource.ProcessId, labels.FormatLabels(deploy.Spec.Template.Labels), existingPodName, resource.Claim)
+			err := k.WaitForPodBySelectorUntilRunning(resource.Pipeline.MetaData.CompanyId, resource.Step, deploy.Name, deploy.Namespace, resource.ProcessId, labels.FormatLabels(deploy.Spec.Template.Labels),*prev.Spec.Replicas, existingPodName, resource.Claim)
 			if err != nil {
 				return err
 			}
@@ -1502,7 +1502,7 @@ func (k k8sService) UpdateStatefulSet(resource v1.Resource) error {
 			subject.EventData["footmark"] = enums.POST_AGENT_JOB
 			subject.EventData["status"] = enums.PROCESSING
 			go k.notifyAll(subject)
-			err := k.WaitForPodBySelectorAndRevisionUntilRunning(resource.Pipeline.MetaData.CompanyId, resource.Step, statefulSet.Name, statefulSet.Namespace, resource.ProcessId, labels.FormatLabels(statefulSet.Spec.Template.Labels), existingPodRevisions, resource.Claim)
+			err := k.WaitForPodBySelectorAndRevisionUntilRunning(resource.Pipeline.MetaData.CompanyId, resource.Step, statefulSet.Name, statefulSet.Namespace, resource.ProcessId, labels.FormatLabels(statefulSet.Spec.Template.Labels),*prev.Spec.Replicas, existingPodRevisions, resource.Claim)
 			if err != nil {
 				return err
 			}
@@ -1580,34 +1580,38 @@ func (k k8sService) isPodRunning(podName, namespace string) error {
 		for _, each := range pod.Status.ContainerStatuses {
 			if each.State.Waiting != nil {
 				if each.State.Waiting.Reason == "ImagePullBackOff" {
-					return  errors.New("Pod has error: ImagePullBackOff")
+					return  errors.New("Pod has error: ImagePullBackOff."+" [Message]:"+each.State.Waiting.Message)
 				} else if each.State.Waiting.Reason == "CrashLoopBackOff" {
-					return errors.New("Pod has error: CrashLoopBackOff")
+					return errors.New("Pod has error: CrashLoopBackOff."+" [Message]:"+each.State.Waiting.Message)
 				} else if each.State.Waiting.Reason == "ErrImagePull" {
-					return errors.New("Pod has error: ErrImagePull")
+					return errors.New("Pod has error: ErrImagePull."+" [Message]:"+each.State.Waiting.Message)
 				} else if each.State.Waiting.Reason == "CreateContainerConfigError" {
-					return errors.New("Pod has error: CreateContainerConfigError")
+					return errors.New("Pod has error: CreateContainerConfigError."+" [Message]:"+each.State.Waiting.Message)
 				} else if each.State.Waiting.Reason == "InvalidImageName" {
-					return errors.New("Pod has error: InvalidImageName")
+					return errors.New("Pod has error: InvalidImageName."+" [Message]:"+each.State.Waiting.Message)
 				} else if each.State.Waiting.Reason == "CreateContainerError" {
-					return errors.New("Pod has error: CreateContainerError")
+					return errors.New("Pod has error: CreateContainerError."+" [Message]:"+each.State.Waiting.Message)
 				}else if each.State.Waiting.Reason=="ContainerCreating" {
 					time.Sleep(time.Second*5)
 					return k.isPodRunning(podName,namespace)
+				}else{
+					return errors.New("Pod has error:"+each.State.Waiting.Reason+" [Message]:"+each.State.Waiting.Message)
 				}
 			} else if each.State.Terminated != nil {
 				if each.State.Terminated.Reason == "OOMKilled" {
-					return errors.New("Pod has error: OOMKilled")
+					return errors.New("Pod has error: OOMKilled."+" [Message]:"+each.State.Terminated.Message)
 				} else if each.State.Terminated.Reason == "Error" {
-					return errors.New("Pod has error: Error")
+					return errors.New("Pod has error: Error."+" [Message]:"+each.State.Terminated.Message)
 				} else if each.State.Terminated.Reason == "Completed" {
 					completedCount++
 				} else if each.State.Terminated.Reason == "ContainerCannotRun" {
-					return errors.New("Pod has error: ContainerCannotRun")
+					return errors.New("Pod has error: ContainerCannotRun."+" [Message]:"+each.State.Terminated.Message)
 				} else if each.State.Terminated.Reason == "ContainerCannotRun" {
-					return errors.New("Pod has error: InvalidImageName")
+					return errors.New("Pod has error: InvalidImageName."+" [Message]:"+each.State.Terminated.Message)
 				} else if each.State.Terminated.Reason == "DeadlineExceeded" {
-					return errors.New("Pod has error: DeadlineExceeded")
+					return errors.New("Pod has error: DeadlineExceeded."+" [Message]:"+each.State.Terminated.Message)
+				}else{
+					return errors.New("Pod has error:"+each.State.Terminated.Reason+" [Message]:"+each.State.Terminated.Message)
 				}
 			}
 		}
@@ -1619,12 +1623,12 @@ func (k k8sService) isPodRunning(podName, namespace string) error {
 		case coreV1.PodRunning:
 			return nil
 		case coreV1.PodFailed:
-			return errors.New("Pod has error!")
+			return errors.New("Pod has error: "+string(pod.Status.Phase)+" [Message]:"+pod.Status.Reason)
 		case coreV1.PodUnknown:
 			if len(pod.Status.Conditions) > 0 {
 				return errors.New(pod.Status.Conditions[len(pod.Status.Conditions)].Message)
 			}
-			return errors.New("Pod Status is unknown!")
+			return errors.New("Pod status is unknown: "+string(pod.Status.Phase)+" [Message]:"+pod.Status.Reason)
 		}
 		return nil
 }
@@ -1633,7 +1637,7 @@ func (k k8sService) waitForPodRunning(namespace, podName string) error {
 	return  k.isPodRunning(podName, namespace)
 }
 
-func (k k8sService) ListNewPodsByRevision(retryCount int, namespace, selector string, revision map[string]bool) (*coreV1.PodList, error) {
+func (k k8sService) ListNewPodsByRevision(retryCount int, namespace, selector string, replica int32,revision map[string]bool) (*coreV1.PodList, error) {
 	listOptions := metaV1.ListOptions{LabelSelector: selector}
 	podList, err := k.kcs.CoreV1().Pods(namespace).List(context.Background(), listOptions)
 	if err != nil {
@@ -1647,15 +1651,15 @@ func (k k8sService) ListNewPodsByRevision(retryCount int, namespace, selector st
 		}
 		newPods = append(newPods, each.Name)
 	}
-	if len(newPods) == 0 && retryCount < 10 {
+	if int32(len(newPods)) <replica && retryCount < 10 {
 		time.Sleep(time.Second * 2)
 		retryCount = retryCount + 1
-		return k.ListNewPodsByRevision(retryCount, namespace, selector, revision)
+		return k.ListNewPodsByRevision(retryCount, namespace, selector,replica, revision)
 	}
 	return podList, nil
 }
 
-func (k k8sService) ListNewPods(retryCount int, namespace, selector string, existingPodMap map[string]bool) (*coreV1.PodList, error) {
+func (k k8sService) ListNewPods(retryCount int, namespace, selector string,replica int32, existingPodMap map[string]bool) (*coreV1.PodList, error) {
 	listOptions := metaV1.ListOptions{LabelSelector: selector}
 	podList, err := k.kcs.CoreV1().Pods(namespace).List(context.Background(), listOptions)
 	if err != nil {
@@ -1669,15 +1673,15 @@ func (k k8sService) ListNewPods(retryCount int, namespace, selector string, exis
 		}
 		newPods.Items = append(newPods.Items, each)
 	}
-	if len(newPods.Items) <len(existingPodMap) && retryCount < 20 {
+	if int32(len(newPods.Items)) <replica && retryCount < 20 {
 		time.Sleep(time.Second * 5)
 		retryCount = retryCount + 1
-		return k.ListNewPods(retryCount, namespace, selector, existingPodMap)
+		return k.ListNewPods(retryCount, namespace, selector,replica, existingPodMap)
 	}
 	return podList, nil
 }
 
-func (k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(companyId, step, name, namespace, processId, selector string, revisions map[string]bool, claim int) error {
+func (k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(companyId, step, name, namespace, processId, selector string,replica int32, revisions map[string]bool, claim int) error {
 	subject := v1.Subject{step, "Listing Pods ...", name, namespace, processId, nil, nil, nil}
 	subject.EventData = make(map[string]interface{})
 	subject.EventData["log"] = subject.Log
@@ -1688,7 +1692,7 @@ func (k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(companyId, step,
 	subject.EventData["process_id"] = processId
 	subject.EventData["claim"] = strconv.Itoa(claim)
 	go k.notifyAll(subject)
-	podList, err := k.ListNewPodsByRevision(0, namespace, selector, revisions)
+	podList, err := k.ListNewPodsByRevision(0, namespace, selector,replica, revisions)
 	if err != nil {
 		return err
 	}
@@ -1707,7 +1711,7 @@ func (k k8sService) WaitForPodBySelectorAndRevisionUntilRunning(companyId, step,
 	return nil
 }
 
-func (k k8sService) WaitForPodBySelectorUntilRunning(companyId, step, name, namespace, processId, selector string, existingPods map[string]bool, claim int) error {
+func (k k8sService) WaitForPodBySelectorUntilRunning(companyId, step, name, namespace, processId, selector string,replica int32, existingPods map[string]bool, claim int) error {
 	subject := v1.Subject{step, "Listing Pods ...", name, namespace, processId, nil, nil, nil}
 	subject.EventData = make(map[string]interface{})
 	subject.EventData["log"] = subject.Log
@@ -1717,7 +1721,7 @@ func (k k8sService) WaitForPodBySelectorUntilRunning(companyId, step, name, name
 	subject.EventData["reason"] = "n/a"
 	subject.EventData["claim"] = strconv.Itoa(claim)
 	go k.notifyAll(subject)
-	podList, err := k.ListNewPods(0, namespace, selector, existingPods)
+	podList, err := k.ListNewPods(0, namespace, selector,replica, existingPods)
 	if err != nil {
 		return err
 	}
