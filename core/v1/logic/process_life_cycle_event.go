@@ -45,7 +45,7 @@ func (e eventStoreProcessLifeCycleService) Listen(subject v1.Subject) {
 			for _, each := range nextSteps {
 				data = append(data, v1.ProcessLifeCycleEvent{
 					ProcessId: subject.ProcessId,
-					Status:    enums.PAUSED,
+					Status:    enums.QUEUED,
 					Step:      each,
 					Agent:     config.AgentName,
 					CreatedAt: time.Now().UTC(),
