@@ -75,6 +75,8 @@ const (
 	FAILED = PROCESS_STATUS("failed")
 	// COMPLETED pipeline steps status completed
 	PAUSED = PROCESS_STATUS("paused")
+	// QUEUED pipeline steps status queued
+	QUEUED=PROCESS_STATUS("queued")
 )
 
 // ENVIRONMENT run environment
